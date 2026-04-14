@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcana — Watch Face Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Georgia', serif;
+  }
+  canvas { border-radius: 50%; }
+</style>
+</head>
+<body>
+<canvas id="watch" width="396" height="396"></canvas>
+<script>
+const canvas = document.getElementById('watch');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const CX = W / 2;
+const CY = H / 2;
+const D = Math.min(W, H);
+
+// Design constants (relative to D)
+const DIAL_RATIO       = 0.92;
+const BEZEL_WIDTH      = 0.025 * D;
+const BATON_LENGTH     = 0.06 * D;
+const BATON_WIDTH      = 0.01 * D;
+const MINUTE_TICK_LEN  = 0.02 * D;
+const HOUR_HAND_LEN    = 0.30 * D;
+const HOUR_HAND_BASE   = 0.032 * D;
+const MINUTE_HAND_LEN  = 0.42 * D;
+const MINUTE_HAND_BASE = 0.024 * D;
+const SUBDIAL_DIAMETER  = 0.24 * D;
+const SUBDIAL_OFFSET    = 0.26 * D;
+const DIAL_RADIUS       = (DIAL_RATIO * D) / 2;
+
+// Colors
+const BLACK    = '#0a0a0a';
+const SILVER   = '#c0c0c0';
+const SILVER_L = '#e8e8e8';
+const SILVER_D = '#808080';
+const WHITE    = '#f5f5f5';
+const DIM      = '#555555';
+
+function drawSunburstDial() {
+  const grad = ctx.createConicGradient(0, CX, CY);
+  for (let i = 0; i < 36; i++) {
+    const t = i / 36;
+    grad.addColorStop(t, i % 2 === 0 ? '#111111' : '#1a1a1a');
+  }
+  ctx.beginPath();
+  ctx.arc(CX, CY, DIAL_RADIUS, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+function drawBezel() {
+  const outerR = D / 2;
+  const innerR = outerR - BEZEL_WIDTH;
+  ctx.beginPath();
+  ctx.arc(CX, CY, outerR, 0, Math.PI * 2);
+  ctx.arc(CX, CY, innerR, 0, Math.PI * 2, true);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(CX - outerR, CY - outerR, CX + outerR, CY + outerR);
+  grad.addColorStop(0, SILVER_L);
+  grad.addColorStop(0.3, SILVER);
+  grad.addColorStop(0.5, SILVER_D);
+  grad.addColorStop(0.7, SILVER);
+  grad.addColorStop(1, SILVER_L);
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+function drawMinuteTicks() {
+  const outerR = DIAL_RADIUS - 4;
+  ctx.strokeStyle = DIM;
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < 60; i++) {
+    if (i % 5 === 0) continue; // skip hour positions
+    const angle = (i * 6 - 90) * Math.PI / 180;
+    const x1 = CX + Math.cos(angle) * outerR;
+    const y1 = CY + Math.sin(angle) * outerR;
+    const x2 = CX + Math.cos(angle) * (outerR - MINUTE_TICK_LEN);
+    const y2 = CY + Math.sin(angle) * (outerR - MINUTE_TICK_LEN);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+}
+
+function drawBatonIndices() {
+  const outerR = DIAL_RADIUS - 4;
+  const innerR = outerR - BATON_LENGTH;
+  // Skip index at 6 (subdial), draw at other hours
+  const hours = [1, 2, 4, 5, 7, 8, 10, 11]; // 12, 3, 9 get roman numerals
+  for (const h of hours) {
+    const angle = (h * 30 - 90) * Math.PI / 180;
+    ctx.save();
+    ctx.translate(CX, CY);
+    ctx.rotate(angle + Math.PI / 2);
+    const grad = ctx.createLinearGradient(-BATON_WIDTH / 2, -outerR, BATON_WIDTH / 2, -outerR);
+    grad.addColorStop(0, SILVER_D);
+    grad.addColorStop(0.5, SILVER_L);
+    grad.addColorStop(1, SILVER_D);
+    ctx.fillStyle = grad;
+    // Tapered baton: wider at outer, narrow at inner
+    ctx.beginPath();
+    ctx.moveTo(-BATON_WIDTH / 2, -(outerR));
+    ctx.lineTo(BATON_WIDTH / 2, -(outerR));
+    ctx.lineTo(BATON_WIDTH / 3, -(innerR));
+    ctx.lineTo(-BATON_WIDTH / 3, -(innerR));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawRomanNumerals() {
+  const r = DIAL_RADIUS - BATON_LENGTH - 12;
+  ctx.fillStyle = SILVER;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const numerals = [
+    { text: 'XII', hour: 12 },
+    { text: 'III', hour: 3 },
+    { text: 'IX',  hour: 9 },
+  ];
+  const fontSize = D * 0.055;
+  ctx.font = `${fontSize}px Georgia, serif`;
+  for (const n of numerals) {
+    const angle = (n.hour * 30 - 90) * Math.PI / 180;
+    const x = CX + Math.cos(angle) * r;
+    const y = CY + Math.sin(angle) * r;
+    ctx.fillText(n.text, x, y);
+  }
+}
+
+function drawSubdialFrame(cx, cy, radius) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = SILVER_D;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Inner ticks
+  for (let i = 0; i < 12; i++) {
+    const angle = (i * 30 - 90) * Math.PI / 180;
+    const x1 = cx + Math.cos(angle) * radius;
+    const y1 = cy + Math.sin(angle) * radius;
+    const x2 = cx + Math.cos(angle) * (radius - 4);
+    const y2 = cy + Math.sin(angle) * (radius - 4);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = DIM;
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  }
+}
+
+function drawSecondsSubdial(seconds, millis) {
+  const cx = CX;
+  const cy = CY + SUBDIAL_OFFSET;
+  const r = SUBDIAL_DIAMETER / 2;
+  drawSubdialFrame(cx, cy, r);
+  // Hand
+  const totalSec = seconds + millis / 1000;
+  const angle = (totalSec * 6 - 90) * Math.PI / 180;
+  const handLen = r * 0.8;
+  const tailLen = r * 0.2;
+  ctx.beginPath();
+  ctx.moveTo(cx - Math.cos(angle) * tailLen, cy - Math.sin(angle) * tailLen);
+  ctx.lineTo(cx + Math.cos(angle) * handLen, cy + Math.sin(angle) * handLen);
+  ctx.strokeStyle = SILVER;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Tiny center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+  ctx.fillStyle = SILVER;
+  ctx.fill();
+}
+
+function drawDateWindow(day) {
+  const cx = CX + SUBDIAL_OFFSET;
+  const cy = CY;
+  const w = D * 0.07;
+  const h = D * 0.05;
+  // Background
+  ctx.fillStyle = WHITE;
+  ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+  ctx.strokeStyle = SILVER_D;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(cx - w / 2, cy - h / 2, w, h);
+  // Day number
+  ctx.fillStyle = BLACK;
+  ctx.font = `bold ${D * 0.035}px Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(day), cx, cy + 1);
+}
+
+function drawBatteryGauge(level) {
+  const cx = CX - SUBDIAL_OFFSET;
+  const cy = CY;
+  const r = SUBDIAL_DIAMETER / 2;
+  drawSubdialFrame(cx, cy, r);
+  // Arc gauge
+  const startAngle = Math.PI * 0.75;
+  const endAngle = Math.PI * 2.25;
+  const sweepAngle = startAngle + (endAngle - startAngle) * level;
+  // Background arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.7, startAngle, endAngle);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  // Filled arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.7, startAngle, sweepAngle);
+  ctx.strokeStyle = level > 0.2 ? SILVER : '#ff4444';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  // Percentage text
+  ctx.fillStyle = SILVER;
+  ctx.font = `${D * 0.028}px Georgia, serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(Math.round(level * 100) + '%', cx, cy + r * 0.25);
+}
+
+function drawDauphineHand(angle, length, baseWidth, color) {
+  ctx.save();
+  ctx.translate(CX, CY);
+  ctx.rotate(angle);
+  const grad = ctx.createLinearGradient(-baseWidth / 2, 0, baseWidth / 2, 0);
+  grad.addColorStop(0, SILVER_D);
+  grad.addColorStop(0.4, SILVER_L);
+  grad.addColorStop(0.6, SILVER_L);
+  grad.addColorStop(1, SILVER_D);
+  ctx.fillStyle = grad;
+  // Dauphine shape: wide at base, tapers to point
+  ctx.beginPath();
+  ctx.moveTo(-baseWidth / 2, 12);       // tail stub
+  ctx.lineTo(-baseWidth / 2, 0);         // base left
+  ctx.lineTo(-baseWidth / 6, -length * 0.6); // mid taper
+  ctx.lineTo(0, -length);                // tip
+  ctx.lineTo(baseWidth / 6, -length * 0.6);
+  ctx.lineTo(baseWidth / 2, 0);
+  ctx.lineTo(baseWidth / 2, 12);
+  ctx.closePath();
+  ctx.fill();
+  // Shadow edge
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCenterPin() {
+  // Outer ring
+  const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, 6);
+  grad.addColorStop(0, SILVER_L);
+  grad.addColorStop(0.5, SILVER);
+  grad.addColorStop(1, SILVER_D);
+  ctx.beginPath();
+  ctx.arc(CX, CY, 6, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  // Inner dot
+  ctx.beginPath();
+  ctx.arc(CX, CY, 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#333';
+  ctx.fill();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Black background circle
+  ctx.beginPath();
+  ctx.arc(CX, CY, D / 2, 0, Math.PI * 2);
+  ctx.fillStyle = BLACK;
+  ctx.fill();
+
+  drawSunburstDial();
+  drawBezel();
+  drawMinuteTicks();
+  drawBatonIndices();
+  drawRomanNumerals();
+
+  const now = new Date();
+  const hours = now.getHours() % 12;
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const millis = now.getMilliseconds();
+
+  // Subdials
+  drawSecondsSubdial(seconds, millis);
+  drawDateWindow(now.getDate());
+  drawBatteryGauge(0.85); // Simulated battery
+
+  // Hands — continuous movement
+  const hourAngle = ((hours + minutes / 60) * 30 - 90) * Math.PI / 180;
+  const minuteAngle = ((minutes + seconds / 60) * 6 - 90) * Math.PI / 180;
+
+  // Shadow layer for depth
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  drawDauphineHand(hourAngle, HOUR_HAND_LEN, HOUR_HAND_BASE, SILVER);
+  drawDauphineHand(minuteAngle, MINUTE_HAND_LEN, MINUTE_HAND_BASE, SILVER);
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  drawCenterPin();
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
