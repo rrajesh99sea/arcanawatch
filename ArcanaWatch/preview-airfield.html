@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Airfield — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){
+  ctx.save(); ctx.beginPath(); ctx.roundRect(0,0,W,H,55); ctx.clip();
+}
+
+function drawBG(){
+  ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,W,H);
+  // Outer case ring
+  const g=ctx.createLinearGradient(CX-192,CY-192,CX+192,CY+192);
+  g.addColorStop(0,'#b0b0b0'); g.addColorStop(0.5,'#707070'); g.addColorStop(1,'#c0c0c0');
+  ctx.beginPath(); ctx.arc(CX,CY,192,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,183,0,Math.PI*2);
+  ctx.fillStyle='#111'; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,178,0,Math.PI*2);
+  ctx.fillStyle='#0d0d0d'; ctx.fill();
+}
+
+function drawOuterScale(){
+  // 24-hour scale outer ring — pilot style
+  for(let i=0;i<24;i++){
+    const a=(i*15-90)*Math.PI/180;
+    const r1=175, r2=i%6===0?160:i%2===0?165:168;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*r1,CY+Math.sin(a)*r1);
+    ctx.lineTo(CX+Math.cos(a)*r2,CY+Math.sin(a)*r2);
+    ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=i%6===0?2:1; ctx.stroke();
+  }
+  ctx.font=`${W*0.026}px Arial`; ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const hrs24=[{t:'6',h:6},{t:'12',h:12},{t:'18',h:18},{t:'24',h:0}];
+  for(const n of hrs24){
+    const a=(n.h*15-90)*Math.PI/180;
+    ctx.fillText(n.t,CX+Math.cos(a)*153,CY+Math.sin(a)*153);
+  }
+}
+
+function drawIndices(){
+  const R=138;
+  for(let i=0;i<12;i++){
+    const a=(i*30-90)*Math.PI/180;
+    if(i===0){
+      // Triangle at 12
+      ctx.save(); ctx.translate(CX+Math.cos(a)*(R-8),CY+Math.sin(a)*(R-8));
+      ctx.rotate(a+Math.PI/2);
+      ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(-7,4); ctx.lineTo(7,4); ctx.closePath();
+      ctx.fillStyle='#ffffff'; ctx.fill();
+      ctx.restore();
+    } else {
+      const len=i%3===0?18:12;
+      const x1=CX+Math.cos(a)*R, y1=CY+Math.sin(a)*R;
+      const x2=CX+Math.cos(a)*(R-len), y2=CY+Math.sin(a)*(R-len);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.strokeStyle='#fff'; ctx.lineWidth=i%3===0?4:2; ctx.lineCap='square'; ctx.stroke();
+    }
+  }
+  // Minute ticks
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+    ctx.lineTo(CX+Math.cos(a)*(R-6),CY+Math.sin(a)*(R-6));
+    ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+function drawNumerals(){
+  const positions=[{t:'3',h:3},{t:'6',h:6},{t:'9',h:9}];
+  ctx.font=`bold ${W*0.085}px 'Arial Black', Arial`;
+  ctx.fillStyle='#ffffff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const n of positions){
+    const a=(n.h*30-90)*Math.PI/180;
+    ctx.fillText(n.t,CX+Math.cos(a)*100,CY+Math.sin(a)*100);
+  }
+  // 12 is triangle already
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font=`${W*0.042}px 'Arial Black', Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('AIRFIELD',CX,CY-52);
+  ctx.font=`${W*0.022}px Arial`;
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.fillText('TYPE B  AUTOMATIC',CX,CY-36);
+}
+
+function drawHand(angle,len,w,color,tailLen=12){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath();
+  ctx.moveTo(-w/2,tailLen); ctx.lineTo(-w/2,0);
+  ctx.lineTo(-w/2,-(len*0.4)); ctx.lineTo(-w*1.2,-(len*0.4));
+  ctx.lineTo(-w*1.2,-(len*0.55)); ctx.lineTo(-w/2,-(len*0.55));
+  ctx.lineTo(-w/2,-len); ctx.lineTo(w/2,-len);
+  ctx.lineTo(w/2,-(len*0.55)); ctx.lineTo(w*1.2,-(len*0.55));
+  ctx.lineTo(w*1.2,-(len*0.4)); ctx.lineTo(w/2,-(len*0.4));
+  ctx.lineTo(w/2,0); ctx.lineTo(w/2,tailLen); ctx.closePath();
+  ctx.fillStyle=color; ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=0.5; ctx.stroke();
+  // Lume dot at center of hand
+  ctx.beginPath(); ctx.arc(0,-len*0.3,w*0.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(180,240,180,0.3)'; ctx.fill();
+  ctx.restore();
+}
+
+function drawSeconds(angle){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-130);
+  ctx.strokeStyle='#ff5500'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-115,6,0,Math.PI*2);
+  ctx.fillStyle='#ff5500'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2);
+  ctx.fillStyle='#ff5500'; ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  drawBG(); drawOuterScale(); drawIndices(); drawNumerals(); drawBrand();
+
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=10;
+  drawHand(ha,88,6,'#fff');
+  drawHand(ma,122,5,'#fff');
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  drawSeconds(sa);
+
+  // Center pin
+  ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2);
+  ctx.fillStyle='#ff5500'; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

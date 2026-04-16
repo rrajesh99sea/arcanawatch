@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch Face Gallery</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; font-family:Georgia,serif; color:#ccc; padding:40px 20px; }
+  h1 { text-align:center; font-size:28px; letter-spacing:4px; color:#e0e0e0; margin-bottom:8px; }
+  p.sub { text-align:center; font-size:13px; color:#666; letter-spacing:2px; margin-bottom:48px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:32px; max-width:1100px; margin:0 auto; }
+  .card { display:flex; flex-direction:column; align-items:center; gap:14px; text-decoration:none; color:#ccc; }
+  .card iframe {
+    width:198px; height:242px; border:none; border-radius:28px;
+    pointer-events:none; overflow:hidden;
+    box-shadow:0 4px 24px rgba(0,0,0,0.6);
+    transform:scale(1); transition:transform 0.2s;
+  }
+  .card:hover iframe { transform:scale(1.04); }
+  .card:hover .name { color:#fff; }
+  .name { font-size:15px; letter-spacing:2px; text-transform:uppercase; }
+  .desc { font-size:11px; color:#555; letter-spacing:1px; }
+</style>
+</head>
+<body>
+<h1>WATCH FACES</h1>
+<p class="sub">Original designs · Apple Watch previews</p>
+<div class="grid">
+  <a class="card" href="preview.html" target="_blank">
+    <iframe src="preview.html" scrolling="no"></iframe>
+    <span class="name">Arcana</span>
+    <span class="desc">Classic dress · dauphine hands</span>
+  </a>
+  <a class="card" href="preview-porthole.html" target="_blank">
+    <iframe src="preview-porthole.html" scrolling="no"></iframe>
+    <span class="name">Porthole</span>
+    <span class="desc">Octagonal sports luxury</span>
+  </a>
+  <a class="card" href="preview-airfield.html" target="_blank">
+    <iframe src="preview-airfield.html" scrolling="no"></iframe>
+    <span class="name">Airfield</span>
+    <span class="desc">Type B pilot · high legibility</span>
+  </a>
+  <a class="card" href="preview-depths.html" target="_blank">
+    <iframe src="preview-depths.html" scrolling="no"></iframe>
+    <span class="name">Depths</span>
+    <span class="desc">Dive watch · rotating bezel</span>
+  </a>
+  <a class="card" href="preview-chronicler.html" target="_blank">
+    <iframe src="preview-chronicler.html" scrolling="no"></iframe>
+    <span class="name">Chronicler</span>
+    <span class="desc">Chronograph · tachymeter</span>
+  </a>
+  <a class="card" href="preview-longitude.html" target="_blank">
+    <iframe src="preview-longitude.html" scrolling="no"></iframe>
+    <span class="name">Longitude</span>
+    <span class="desc">German precision · outsize date</span>
+  </a>
+  <a class="card" href="preview-fortress.html" target="_blank">
+    <iframe src="preview-fortress.html" scrolling="no"></iframe>
+    <span class="name">Fortress</span>
+    <span class="desc">Hexagonal · tapisserie dial</span>
+  </a>
+  <a class="card" href="preview-garrison.html" target="_blank">
+    <iframe src="preview-garrison.html" scrolling="no"></iframe>
+    <span class="name">Garrison</span>
+    <span class="desc">Military field · 24h scale</span>
+  </a>
+  <a class="card" href="preview-silhouette.html" target="_blank">
+    <iframe src="preview-silhouette.html" scrolling="no"></iframe>
+    <span class="name">Silhouette</span>
+    <span class="desc">Ultra-thin · leaf hands · gold</span>
+  </a>
+  <a class="card" href="preview-nocturne.html" target="_blank">
+    <iframe src="preview-nocturne.html" scrolling="no"></iframe>
+    <span class="name">Nocturne</span>
+    <span class="desc">Art deco · midnight blue</span>
+  </a>
+  <a class="card" href="preview-lattice.html" target="_blank">
+    <iframe src="preview-lattice.html" scrolling="no"></iframe>
+    <span class="name">Lattice</span>
+    <span class="desc">Skeleton · open movement</span>
+  </a>
+  <a class="card" href="preview-meridian.html" target="_blank">
+    <iframe src="preview-meridian.html" scrolling="no"></iframe>
+    <span class="name">Meridian</span>
+    <span class="desc">Dual time · world cities</span>
+  </a>
+</div>
+</body>
+</html>

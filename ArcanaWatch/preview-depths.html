@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Depths — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0a0a0a; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 40px rgba(0,0,0,0.9); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function drawBG(){
+  ctx.fillStyle='#050505'; ctx.fillRect(0,0,W,H);
+}
+
+function drawBezelRing(secondOffset){
+  // Rotating bezel ring with 60-min scale
+  ctx.save();
+  ctx.translate(CX,CY);
+  ctx.rotate(secondOffset*6*Math.PI/180); // rotates with seconds for demo
+  const outerR=192, innerR=172;
+  // Black bezel
+  ctx.beginPath(); ctx.arc(0,0,outerR,0,Math.PI*2);
+  ctx.arc(0,0,innerR,0,Math.PI*2,true); ctx.closePath();
+  ctx.fillStyle='#111'; ctx.fill();
+  // Ticks on bezel
+  for(let i=0;i<60;i++){
+    const a=(i*6-90)*Math.PI/180;
+    const r1=outerR-2;
+    const r2=i===0?outerR-16:i%5===0?outerR-10:outerR-6;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);
+    ctx.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);
+    ctx.strokeStyle=i===0?'#ff4400':'rgba(180,255,180,0.6)';
+    ctx.lineWidth=i===0?3:i%5===0?2:1; ctx.stroke();
+  }
+  // Numbers 10,20,30,40,50
+  ctx.font=`bold ${W*0.03}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let i=1;i<=5;i++){
+    const a=(i*60-90)*Math.PI/180;
+    const r=outerR-22;
+    ctx.fillStyle='rgba(180,255,180,0.7)';
+    ctx.fillText(String(i*10),Math.cos(a)*r,Math.sin(a)*r);
+  }
+  ctx.restore();
+}
+
+function drawDial(){
+  // Dark green/black dial
+  const g=ctx.createRadialGradient(CX,CY,0,CX,CY,168);
+  g.addColorStop(0,'#0a1a0a'); g.addColorStop(1,'#040a04');
+  ctx.beginPath(); ctx.arc(CX,CY,170,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='#1a3a1a'; ctx.lineWidth=1; ctx.stroke();
+}
+
+function drawMarkers(){
+  const R=148;
+  for(let i=0;i<12;i++){
+    const a=(i*30-90)*Math.PI/180;
+    ctx.save();
+    ctx.translate(CX+Math.cos(a)*(R-12),CY+Math.sin(a)*(R-12));
+    ctx.rotate(a+Math.PI/2);
+    if(i===0){
+      // Triangle at 12
+      ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(-6,6); ctx.lineTo(6,6); ctx.closePath();
+      ctx.fillStyle='rgba(180,255,180,0.9)'; ctx.fill();
+    } else if(i%3===0){
+      // Large rectangle at 3,6,9
+      ctx.fillStyle='rgba(180,255,180,0.85)';
+      ctx.fillRect(-5,-14,10,28);
+    } else {
+      // Small square
+      ctx.fillStyle='rgba(160,235,160,0.6)';
+      ctx.fillRect(-3,-10,6,20);
+    }
+    ctx.restore();
+  }
+  // Minute ticks
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+    ctx.lineTo(CX+Math.cos(a)*(R-6),CY+Math.sin(a)*(R-6));
+    ctx.strokeStyle='rgba(160,235,160,0.3)'; ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+function drawDate(day){
+  const dx=CX+80,dy=CY;
+  ctx.fillStyle='#e8e8e8';
+  ctx.fillRect(dx-18,dy-11,36,22);
+  ctx.strokeStyle='#333'; ctx.lineWidth=1;
+  ctx.strokeRect(dx-18,dy-11,36,22);
+  ctx.fillStyle='#111';
+  ctx.font=`bold ${W*0.04}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(day),dx,dy+1);
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(200,255,200,0.5)';
+  ctx.font=`${W*0.038}px Georgia`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('DEPTHS',CX,CY-48);
+  ctx.font=`${W*0.02}px Georgia`;
+  ctx.fillStyle='rgba(200,255,200,0.3)';
+  ctx.fillText('300M  AUTOMATIC',CX,CY-33);
+}
+
+function drawHand(angle,len,w,lume){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  // Shadow
+  ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=6; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
+  // Outer hand shape
+  ctx.beginPath();
+  ctx.moveTo(-w/2,12); ctx.lineTo(-w/2,0);
+  ctx.lineTo(-w/2,-len*0.3); ctx.lineTo(-w/1.2,-len*0.3);
+  ctx.lineTo(-w/1.2,-len*0.7); ctx.lineTo(-w/2,-len*0.7);
+  ctx.lineTo(-w/2,-len); ctx.lineTo(w/2,-len);
+  ctx.lineTo(w/2,-len*0.7); ctx.lineTo(w/1.2,-len*0.7);
+  ctx.lineTo(w/1.2,-len*0.3); ctx.lineTo(w/2,-len*0.3);
+  ctx.lineTo(w/2,0); ctx.lineTo(w/2,12); ctx.closePath();
+  ctx.fillStyle='#303030'; ctx.fill();
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  // Lume stripe down center
+  if(lume){
+    ctx.fillStyle='rgba(180,255,180,0.25)';
+    ctx.fillRect(-w/4,-len*0.68,w/2,len*0.38);
+    ctx.fillRect(-w/4,-len,w/2,len*0.22);
+  }
+  ctx.restore();
+}
+
+function drawSecondHand(angle){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,22); ctx.lineTo(0,-140);
+  ctx.strokeStyle='#ff3300'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-130,5,0,Math.PI*2);
+  ctx.fillStyle='#ff3300'; ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  drawBG();
+  drawBezelRing(s+ms/1000);
+  drawDial(); drawMarkers();
+  drawDate(now.getDate());
+  drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  drawHand(ha,92,10,true);
+  drawHand(ma,130,8,true);
+  drawSecondHand(sa);
+
+  // Center
+  ctx.beginPath(); ctx.arc(CX,CY,6,0,Math.PI*2);
+  ctx.fillStyle='#ff3300'; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,3,0,Math.PI*2);
+  ctx.fillStyle='#222'; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

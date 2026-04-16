@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Garrison — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+// Military field watch: khaki/matte, 24hr outer scale, high legibility
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function drawBG(){
+  // Matte dark khaki case
+  const g=ctx.createRadialGradient(CX,CY,50,CX,CY,200);
+  g.addColorStop(0,'#2a2a20'); g.addColorStop(1,'#151510');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // Case outline
+  ctx.beginPath(); ctx.arc(CX,CY,192,0,Math.PI*2);
+  ctx.strokeStyle='#3a3a2a'; ctx.lineWidth=3; ctx.stroke();
+}
+
+function drawDial(){
+  const g=ctx.createRadialGradient(CX,CY,0,CX,CY,175);
+  g.addColorStop(0,'#2a3020'); g.addColorStop(0.8,'#222818'); g.addColorStop(1,'#1a2010');
+  ctx.beginPath(); ctx.arc(CX,CY,175,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='#3a4030'; ctx.lineWidth=1; ctx.stroke();
+}
+
+function drawOuterRing24h(){
+  // Outer 24-hour ring
+  const R=168;
+  for(let i=0;i<24;i++){
+    const a=(i*15-90)*Math.PI/180;
+    const isMaj=i%6===0, isMid=i%3===0;
+    const r2=R-(isMaj?18:isMid?12:7);
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+    ctx.lineTo(CX+Math.cos(a)*r2,CY+Math.sin(a)*r2);
+    ctx.strokeStyle='rgba(200,210,160,0.6)'; ctx.lineWidth=isMaj?2.5:isMid?1.5:1; ctx.stroke();
+    if(isMaj){
+      const label=[0,6,12,18][i/6];
+      const lr=R-26;
+      ctx.font=`bold ${W*0.032}px 'Courier New', monospace`;
+      ctx.fillStyle='rgba(200,210,160,0.5)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(label).padStart(2,'0'),CX+Math.cos(a)*lr,CY+Math.sin(a)*lr);
+    }
+  }
+}
+
+function drawHourIndices(){
+  const R=140;
+  for(let i=0;i<12;i++){
+    const a=(i*30-90)*Math.PI/180;
+    if(i===0){
+      // Large triangle at 12
+      ctx.save();
+      ctx.translate(CX+Math.cos(a)*(R-10),CY+Math.sin(a)*(R-10));
+      ctx.rotate(a+Math.PI/2);
+      ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(-8,8); ctx.lineTo(8,8); ctx.closePath();
+      ctx.fillStyle='rgba(200,220,150,0.9)'; ctx.fill();
+      ctx.restore();
+    } else {
+      const isHour=true;
+      const x1=CX+Math.cos(a)*R,y1=CY+Math.sin(a)*R;
+      const x2=CX+Math.cos(a)*(R-16),y2=CY+Math.sin(a)*(R-16);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.strokeStyle='rgba(200,220,150,0.7)'; ctx.lineWidth=i%3===0?4:2.5; ctx.lineCap='round'; ctx.stroke();
+    }
+  }
+  // Minute ticks
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+    ctx.lineTo(CX+Math.cos(a)*(R-6),CY+Math.sin(a)*(R-6));
+    ctx.strokeStyle='rgba(180,200,130,0.35)'; ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+function drawNumerals(){
+  ctx.font=`bold ${W*0.075}px 'Courier New', monospace`;
+  ctx.fillStyle='rgba(220,235,170,0.9)';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const n=[{t:'3',h:3},{t:'6',h:6},{t:'9',h:9}];
+  for(const nr of n){
+    const a=(nr.h*30-90)*Math.PI/180;
+    ctx.fillText(nr.t,CX+Math.cos(a)*102,CY+Math.sin(a)*102);
+  }
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(200,220,150,0.5)';
+  ctx.font=`${W*0.038}px 'Courier New', monospace`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('GARRISON',CX,CY-50);
+  ctx.font=`${W*0.02}px 'Courier New', monospace`;
+  ctx.fillStyle='rgba(180,200,130,0.35)';
+  ctx.fillText('FIELD AUTOMATIC',CX,CY-34);
+}
+
+function drawHand(angle,len,w,color){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  // Sword-style hand with cutout
+  ctx.beginPath();
+  ctx.moveTo(-w/2,14); ctx.lineTo(-w/2,0);
+  ctx.lineTo(-w/2,-len*0.35); ctx.lineTo(-w*0.9,-len*0.35);
+  ctx.lineTo(-w*0.9,-len*0.65); ctx.lineTo(-w/2,-len*0.65);
+  ctx.lineTo(-w/4,-len); ctx.lineTo(w/4,-len);
+  ctx.lineTo(w/2,-len*0.65); ctx.lineTo(w*0.9,-len*0.65);
+  ctx.lineTo(w*0.9,-len*0.35); ctx.lineTo(w/2,-len*0.35);
+  ctx.lineTo(w/2,0); ctx.lineTo(w/2,14); ctx.closePath();
+  ctx.fillStyle=color; ctx.fill();
+  // Lume fill inside cutout
+  ctx.beginPath();
+  ctx.rect(-w/2+1,-len*0.64,w-2,len*0.28);
+  ctx.fillStyle='rgba(180,240,100,0.18)'; ctx.fill();
+  ctx.restore();
+}
+
+function drawSecondsHand(angle){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,22); ctx.lineTo(0,-148);
+  ctx.strokeStyle='#ff4400'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-125,6,0,Math.PI*2);
+  ctx.fillStyle='none'; ctx.strokeStyle='#ff4400'; ctx.lineWidth=2; ctx.stroke();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  drawBG(); drawDial(); drawOuterRing24h(); drawHourIndices(); drawNumerals(); drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=8;
+  drawHand(ha,90,10,'rgba(220,235,170,0.9)');
+  drawHand(ma,130,8,'rgba(220,235,170,0.9)');
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  drawSecondsHand(sa);
+
+  ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2);
+  ctx.fillStyle='rgba(220,235,170,0.9)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,2.5,0,Math.PI*2);
+  ctx.fillStyle='#111'; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

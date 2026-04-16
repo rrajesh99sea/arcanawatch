@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nocturne — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0a0a12; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 50px rgba(80,60,140,0.4); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+// Art deco night watch — inspired by Reverso / art deco pocket watches
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function drawBG(){
+  const g=ctx.createRadialGradient(CX,CY,0,CX,CY,250);
+  g.addColorStop(0,'#12101e'); g.addColorStop(1,'#080812');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+
+function drawCase(){
+  // Dark platinum case with subtle blue tint
+  const g=ctx.createLinearGradient(CX-192,CY-192,CX+192,CY+192);
+  g.addColorStop(0,'#c0bcd0'); g.addColorStop(0.3,'#7070a0');
+  g.addColorStop(0.5,'#a0a0c0'); g.addColorStop(0.7,'#606090'); g.addColorStop(1,'#b0aec8');
+  ctx.beginPath(); ctx.arc(CX,CY,192,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,183,0,Math.PI*2);
+  ctx.strokeStyle='rgba(80,70,120,0.6)'; ctx.lineWidth=2; ctx.stroke();
+}
+
+function drawDial(){
+  // Deep navy/midnight dial
+  const g=ctx.createRadialGradient(CX-20,CY-30,0,CX,CY,182);
+  g.addColorStop(0,'#1a1830'); g.addColorStop(0.6,'#12102a'); g.addColorStop(1,'#0c0a20');
+  ctx.beginPath(); ctx.arc(CX,CY,182,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+}
+
+function drawDecoRings(){
+  // Art deco concentric rings
+  const rings=[170,158,146];
+  const styles=['rgba(180,170,220,0.15)','rgba(160,150,210,0.1)','rgba(140,130,200,0.08)'];
+  rings.forEach((r,i)=>{
+    ctx.beginPath(); ctx.arc(CX,CY,r,0,Math.PI*2);
+    ctx.strokeStyle=styles[i]; ctx.lineWidth=1; ctx.stroke();
+  });
+  // Art deco corner accents — thin radial lines at 45° intervals
+  for(let i=0;i<8;i++){
+    const a=(i*45-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*148,CY+Math.sin(a)*148);
+    ctx.lineTo(CX+Math.cos(a)*168,CY+Math.sin(a)*168);
+    ctx.strokeStyle='rgba(180,160,240,0.2)'; ctx.lineWidth=2; ctx.stroke();
+    // Diamond accent
+    ctx.save();
+    ctx.translate(CX+Math.cos(a)*142,CY+Math.sin(a)*142);
+    ctx.rotate(a+Math.PI/4);
+    ctx.fillStyle='rgba(200,180,255,0.3)';
+    ctx.fillRect(-3,-3,6,6);
+    ctx.restore();
+  }
+}
+
+function drawRomanNumerals(){
+  const R=125;
+  const nums=[
+    {t:'XII',h:12},{t:'I',h:1},{t:'II',h:2},{t:'III',h:3},
+    {t:'IV',h:4},{t:'V',h:5},{t:'VI',h:6},{t:'VII',h:7},
+    {t:'VIII',h:8},{t:'IX',h:9},{t:'X',h:10},{t:'XI',h:11}
+  ];
+  ctx.fillStyle='rgba(200,190,240,0.75)';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const n of nums){
+    const a=(n.h*30-90)*Math.PI/180;
+    const fontSize=n.h===12||n.h===6||n.h===3||n.h===9?W*0.042:W*0.030;
+    ctx.font=`${fontSize}px Georgia`;
+    ctx.fillStyle=n.h===12||n.h===6||n.h===3||n.h===9
+      ?'rgba(220,210,255,0.85)':'rgba(180,170,230,0.55)';
+    ctx.fillText(n.t,CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+  }
+  // Minute dots
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    ctx.beginPath(); ctx.arc(CX+Math.cos(a)*143,CY+Math.sin(a)*143,0.8,0,Math.PI*2);
+    ctx.fillStyle='rgba(180,170,230,0.3)'; ctx.fill();
+  }
+}
+
+function drawBrand(){
+  // Central art deco brand text
+  ctx.fillStyle='rgba(200,190,255,0.55)';
+  ctx.font=`italic ${W*0.042}px Georgia`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('Nocturne',CX,CY-48);
+  // Deco line under brand
+  ctx.beginPath();
+  ctx.moveTo(CX-40,CY-36); ctx.lineTo(CX+40,CY-36);
+  ctx.strokeStyle='rgba(180,160,240,0.3)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.font=`${W*0.018}px Georgia`;
+  ctx.fillStyle='rgba(160,150,220,0.35)';
+  ctx.fillText('NUIT PERPÉTUELLE',CX,CY-26);
+}
+
+function drawHand(angle,len,w,gold){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  const color=gold?'#c8b870':'rgba(200,195,240,0.9)';
+  const edge=gold?'#907030':'rgba(140,130,200,0.6)';
+  const g=ctx.createLinearGradient(-w/2,0,w/2,0);
+  g.addColorStop(0,edge); g.addColorStop(0.5,color); g.addColorStop(1,edge);
+  ctx.fillStyle=g;
+  // Art deco hand — elongated diamond at base
+  const dLen=len*0.25;
+  ctx.beginPath();
+  ctx.moveTo(0,14);
+  ctx.lineTo(-w/2,0);
+  ctx.lineTo(-w*0.7,-dLen);
+  ctx.lineTo(-w/4,-dLen*1.8);
+  ctx.lineTo(0,-len);
+  ctx.lineTo(w/4,-dLen*1.8);
+  ctx.lineTo(w*0.7,-dLen);
+  ctx.lineTo(w/2,0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,0,20,0.3)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+}
+
+function drawSecondsHand(angle){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-148);
+  ctx.strokeStyle='rgba(200,100,255,0.7)'; ctx.lineWidth=1; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-135,3,0,Math.PI*2);
+  ctx.fillStyle='rgba(200,100,255,0.8)'; ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  drawBG(); drawCase(); drawDial(); drawDecoRings(); drawRomanNumerals(); drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(160,140,255,0.3)'; ctx.shadowBlur=12;
+  drawHand(ha,85,11,false);
+  drawHand(ma,130,8,false);
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  drawSecondsHand(sa);
+
+  // Center jewel
+  const cg=ctx.createRadialGradient(CX-1,CY-1,0,CX,CY,6);
+  cg.addColorStop(0,'#d0c8ff'); cg.addColorStop(0.5,'#8070c0'); cg.addColorStop(1,'#302850');
+  ctx.beginPath(); ctx.arc(CX,CY,6,0,Math.PI*2);
+  ctx.fillStyle=cg; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

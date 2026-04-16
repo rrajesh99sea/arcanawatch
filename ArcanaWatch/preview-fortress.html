@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fortress — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+// Inspired by AP Royal Oak: hexagonal bezel with screws, Grande Tapisserie dial
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function hexPath(cx,cy,r,offset=0){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const a=(i*60+offset)*Math.PI/180;
+    i===0?ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+  }
+  ctx.closePath();
+}
+
+function drawBG(){
+  ctx.fillStyle='#0a0a0a'; ctx.fillRect(0,0,W,H);
+}
+
+function drawCase(){
+  // Steel hexagonal case
+  hexPath(CX,CY,192,30);
+  const g=ctx.createLinearGradient(CX-192,CY-192,CX+192,CY+192);
+  g.addColorStop(0,'#e0e0e0'); g.addColorStop(0.25,'#909090');
+  g.addColorStop(0.5,'#d0d0d0'); g.addColorStop(0.75,'#808080'); g.addColorStop(1,'#d8d8d8');
+  ctx.fillStyle=g; ctx.fill();
+
+  // Middle hexagon
+  hexPath(CX,CY,182,30);
+  ctx.strokeStyle='#444'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#4a6a8a'; ctx.fill();
+
+  // Inner bezel ring
+  hexPath(CX,CY,170,30);
+  const ig=ctx.createLinearGradient(CX-170,CY-170,CX+170,CY+170);
+  ig.addColorStop(0,'#d8d8d8'); ig.addColorStop(0.5,'#888'); ig.addColorStop(1,'#d0d0d0');
+  ctx.fillStyle=ig; ctx.fill();
+
+  // 6 Screws at hex corners
+  for(let i=0;i<6;i++){
+    const a=(i*60+30)*Math.PI/180;
+    const sx=CX+Math.cos(a)*183,sy=CY+Math.sin(a)*183;
+    ctx.beginPath(); ctx.arc(sx,sy,7,0,Math.PI*2);
+    const sg=ctx.createRadialGradient(sx-2,sy-2,0,sx,sy,7);
+    sg.addColorStop(0,'#e8e8e8'); sg.addColorStop(0.5,'#aaa'); sg.addColorStop(1,'#555');
+    ctx.fillStyle=sg; ctx.fill();
+    ctx.strokeStyle='#333'; ctx.lineWidth=0.5; ctx.stroke();
+    // Hex screwhead slot
+    ctx.save(); ctx.translate(sx,sy); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(-4,0); ctx.lineTo(4,0);
+    ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawTapisserie(){
+  // Grande Tapisserie — small square hobnail pattern
+  hexPath(CX,CY,164,30);
+  ctx.save(); ctx.clip();
+
+  ctx.fillStyle='#3d5f80'; ctx.fillRect(CX-170,CY-170,340,340);
+
+  const step=10, size=8;
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=0.8;
+  for(let x=CX-170;x<CX+170;x+=step){
+    for(let y=CY-170;y<CY+170;y+=step){
+      const px=x+1,py=y+1;
+      const hl=ctx.createLinearGradient(px,py,px+size,py+size);
+      hl.addColorStop(0,'rgba(255,255,255,0.12)');
+      hl.addColorStop(0.5,'rgba(0,0,0,0.08)');
+      hl.addColorStop(1,'rgba(255,255,255,0.05)');
+      ctx.fillStyle=hl;
+      ctx.fillRect(px,py,size,size);
+      ctx.strokeRect(px,py,size,size);
+    }
+  }
+  ctx.restore();
+}
+
+function drawIndices(){
+  const R=145;
+  // Baton indices
+  for(let i=0;i<12;i++){
+    if(i===3) continue; // date position
+    const a=(i*30-90)*Math.PI/180;
+    ctx.save();
+    ctx.translate(CX+Math.cos(a)*(R-10),CY+Math.sin(a)*(R-10));
+    ctx.rotate(a+Math.PI/2);
+    const g=ctx.createLinearGradient(-4,0,4,0);
+    g.addColorStop(0,'#888'); g.addColorStop(0.5,'#eee'); g.addColorStop(1,'#888');
+    ctx.fillStyle=g;
+    ctx.fillRect(-4,-16,8,32);
+    ctx.restore();
+  }
+  // Minute ticks
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+    ctx.lineTo(CX+Math.cos(a)*(R-7),CY+Math.sin(a)*(R-7));
+    ctx.strokeStyle='rgba(220,220,220,0.35)'; ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+function drawDate(day){
+  const dx=CX+90,dy=CY,dw=36,dh=22;
+  ctx.fillStyle='#c8d8e8';
+  ctx.fillRect(dx-dw/2,dy-dh/2,dw,dh);
+  ctx.strokeStyle='#556677'; ctx.lineWidth=1;
+  ctx.strokeRect(dx-dw/2,dy-dh/2,dw,dh);
+  ctx.fillStyle='#1a2a3a';
+  ctx.font=`bold ${W*0.04}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(day),dx,dy+1);
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(220,235,250,0.65)';
+  ctx.font=`${W*0.038}px Georgia`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('FORTRESS',CX,CY-50);
+  ctx.font=`${W*0.02}px Georgia`;
+  ctx.fillStyle='rgba(200,220,240,0.4)';
+  ctx.fillText('SELF-WINDING',CX,CY-35);
+}
+
+function drawHand(angle,len,w){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  const g=ctx.createLinearGradient(-w/2,0,w/2,0);
+  g.addColorStop(0,'#808080'); g.addColorStop(0.35,'#e0e0e0');
+  g.addColorStop(0.5,'#f0f0f0'); g.addColorStop(0.65,'#e0e0e0'); g.addColorStop(1,'#808080');
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(-w/2,12); ctx.lineTo(-w/2,-len*0.15);
+  ctx.lineTo(-1,-len); ctx.lineTo(1,-len); ctx.lineTo(w/2,-len*0.15);
+  ctx.lineTo(w/2,12); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+}
+
+function drawSeconds(angle){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,18); ctx.lineTo(0,-148);
+  ctx.strokeStyle='#ff3300'; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2);
+  ctx.fillStyle='#ff3300'; ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  drawBG(); drawCase(); drawTapisserie(); drawIndices();
+  drawDate(now.getDate()); drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=8; ctx.shadowOffsetY=2;
+  drawHand(ha,90,12);
+  drawHand(ma,130,9);
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+  drawSeconds(sa);
+
+  const cg=ctx.createRadialGradient(CX,CY,0,CX,CY,7);
+  cg.addColorStop(0,'#eee'); cg.addColorStop(1,'#666');
+  ctx.beginPath(); ctx.arc(CX,CY,7,0,Math.PI*2);
+  ctx.fillStyle=cg; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

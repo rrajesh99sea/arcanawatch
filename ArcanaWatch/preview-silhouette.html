@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Silhouette — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#f0ece4; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 8px 40px rgba(0,0,0,0.3); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+// Ultra-thin minimalist: white lacquer dial, leaf hands, no clutter — inspired by Piaget/VC
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function drawBG(){
+  // White lacquer
+  const g=ctx.createRadialGradient(CX-30,CY-40,0,CX,CY,250);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(0.6,'#f8f5f0'); g.addColorStop(1,'#f0ece4');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+
+function drawCase(){
+  // Yellow gold rose gold case
+  const cg=ctx.createLinearGradient(CX-192,CY-192,CX+192,CY+192);
+  cg.addColorStop(0,'#e8c870'); cg.addColorStop(0.3,'#c8a040');
+  cg.addColorStop(0.5,'#e0c060'); cg.addColorStop(0.7,'#b89030'); cg.addColorStop(1,'#e0c060');
+  ctx.beginPath(); ctx.arc(CX,CY,192,0,Math.PI*2);
+  ctx.fillStyle=cg; ctx.fill();
+  // Inner edge
+  ctx.beginPath(); ctx.arc(CX,CY,185,0,Math.PI*2);
+  ctx.strokeStyle='rgba(180,140,20,0.4)'; ctx.lineWidth=1; ctx.stroke();
+}
+
+function drawDial(){
+  const g=ctx.createRadialGradient(CX-20,CY-30,5,CX,CY,182);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(0.8,'#faf8f4'); g.addColorStop(1,'#f5f2ec');
+  ctx.beginPath(); ctx.arc(CX,CY,182,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+}
+
+function drawGuildoche(){
+  // Subtle guilloché: concentric wave rings
+  ctx.save();
+  ctx.beginPath(); ctx.arc(CX,CY,182,0,Math.PI*2); ctx.clip();
+  ctx.strokeStyle='rgba(200,190,160,0.12)'; ctx.lineWidth=0.8;
+  for(let r=20;r<185;r+=6){
+    ctx.beginPath();
+    for(let a=0;a<Math.PI*2;a+=0.02){
+      const wave=Math.sin(a*8)*1.2;
+      const rx=CX+Math.cos(a)*(r+wave);
+      const ry=CY+Math.sin(a)*(r+wave);
+      a===0?ctx.moveTo(rx,ry):ctx.lineTo(rx,ry);
+    }
+    ctx.closePath(); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawIndices(){
+  const R=162;
+  for(let i=0;i<12;i++){
+    const a=(i*30-90)*Math.PI/180;
+    if(i===0||i===3||i===6||i===9){
+      // Thin gold baton at quarters
+      ctx.save();
+      ctx.translate(CX+Math.cos(a)*(R-12),CY+Math.sin(a)*(R-12));
+      ctx.rotate(a+Math.PI/2);
+      const g=ctx.createLinearGradient(-2,0,2,0);
+      g.addColorStop(0,'#b89030'); g.addColorStop(0.5,'#e8c870'); g.addColorStop(1,'#b89030');
+      ctx.fillStyle=g; ctx.fillRect(-2,-18,4,36);
+      ctx.restore();
+    } else {
+      // Fine dot
+      const x=CX+Math.cos(a)*(R-4),y=CY+Math.sin(a)*(R-4);
+      ctx.beginPath(); ctx.arc(x,y,2,0,Math.PI*2);
+      ctx.fillStyle='#b89030'; ctx.fill();
+    }
+  }
+  // Fine minute ring
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R);
+    ctx.lineTo(CX+Math.cos(a)*(R-5),CY+Math.sin(a)*(R-5));
+    ctx.strokeStyle='rgba(180,140,40,0.3)'; ctx.lineWidth=0.7; ctx.stroke();
+  }
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(140,110,30,0.6)';
+  ctx.font=`italic ${W*0.04}px Georgia`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('Silhouette',CX,CY-52);
+  ctx.font=`${W*0.02}px Georgia`;
+  ctx.fillStyle='rgba(140,110,30,0.4)';
+  ctx.fillText('ULTRA THIN · 18K',CX,CY-36);
+}
+
+function drawSmallSeconds(s){
+  const scx=CX,scy=CY+80,r=30;
+  ctx.beginPath(); ctx.arc(scx,scy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(180,140,40,0.3)'; ctx.lineWidth=0.8; ctx.stroke();
+  for(let i=0;i<60;i++){
+    const a=(i*6-90)*Math.PI/180;
+    const r2=i%5===0?r-6:r-3;
+    ctx.beginPath();
+    ctx.moveTo(scx+Math.cos(a)*r,scy+Math.sin(a)*r);
+    ctx.lineTo(scx+Math.cos(a)*r2,scy+Math.sin(a)*r2);
+    ctx.strokeStyle='rgba(160,120,30,0.4)'; ctx.lineWidth=0.7; ctx.stroke();
+  }
+  const a=(s*6-90)*Math.PI/180;
+  ctx.beginPath();
+  ctx.moveTo(scx-Math.cos(a)*(r*0.2),scy-Math.sin(a)*(r*0.2));
+  ctx.lineTo(scx+Math.cos(a)*(r*0.82),scy+Math.sin(a)*(r*0.82));
+  const sg=ctx.createLinearGradient(scx,scy,scx+Math.cos(a)*r,scy+Math.sin(a)*r);
+  sg.addColorStop(0,'#b89030'); sg.addColorStop(1,'#e0c060');
+  ctx.strokeStyle=sg; ctx.lineWidth=1.2; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(scx,scy,3,0,Math.PI*2);
+  ctx.fillStyle='#c8a040'; ctx.fill();
+}
+
+function drawLeafHand(angle,len,maxW){
+  // Elegant leaf/Breguet hand shape
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  const g=ctx.createLinearGradient(-maxW/2,0,maxW/2,0);
+  g.addColorStop(0,'#a08020'); g.addColorStop(0.3,'#e8c860');
+  g.addColorStop(0.5,'#f8e080'); g.addColorStop(0.7,'#e8c860'); g.addColorStop(1,'#a08020');
+
+  // Leaf: widens to 40% then tapers to point
+  const peak=len*0.38;
+  ctx.beginPath();
+  ctx.moveTo(0,10);
+  ctx.quadraticCurveTo(-maxW/2,-peak*0.5,-maxW/2,-peak);
+  ctx.quadraticCurveTo(-maxW/4,-len*0.7,0,-len);
+  ctx.quadraticCurveTo(maxW/4,-len*0.7,maxW/2,-peak);
+  ctx.quadraticCurveTo(maxW/2,-peak*0.5,0,10);
+  ctx.closePath();
+  ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle='rgba(140,100,10,0.3)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  drawBG(); drawCase(); drawDial(); drawGuildoche(); drawIndices(); drawBrand();
+  drawSmallSeconds(s+ms/1000);
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(180,140,0,0.15)'; ctx.shadowBlur=6;
+  drawLeafHand(ha,88,10);
+  drawLeafHand(ma,128,7);
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+
+  const cg=ctx.createRadialGradient(CX,CY,0,CX,CY,5);
+  cg.addColorStop(0,'#f0d860'); cg.addColorStop(1,'#a08020');
+  ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2);
+  ctx.fillStyle=cg; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

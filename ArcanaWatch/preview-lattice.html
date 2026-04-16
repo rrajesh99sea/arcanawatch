@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lattice — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d0808; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 50px rgba(180,100,20,0.3); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+// Skeleton/open-heart — visible movement bridges, gears, and mainspring
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function drawBG(){
+  ctx.fillStyle='#0d0808'; ctx.fillRect(0,0,W,H);
+  // Deep rose gold case
+  const g=ctx.createLinearGradient(CX-192,CY-192,CX+192,CY+192);
+  g.addColorStop(0,'#c8845a'); g.addColorStop(0.3,'#a06040');
+  g.addColorStop(0.5,'#c08060'); g.addColorStop(0.7,'#906040'); g.addColorStop(1,'#c08060');
+  ctx.beginPath(); ctx.arc(CX,CY,192,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,183,0,Math.PI*2);
+  ctx.fillStyle='#100806'; ctx.fill();
+}
+
+function drawMainspring(angle){
+  // Mainspring barrel — large gear at upper-left
+  const bx=CX-58,by=CY-58,r=52;
+  // Teeth
+  const teeth=32;
+  ctx.save(); ctx.translate(bx,by); ctx.rotate(angle*0.05);
+  ctx.beginPath();
+  for(let i=0;i<teeth;i++){
+    const a1=(i/teeth)*Math.PI*2;
+    const a2=((i+0.4)/teeth)*Math.PI*2;
+    const a3=((i+0.5)/teeth)*Math.PI*2;
+    const a4=((i+0.9)/teeth)*Math.PI*2;
+    ctx.lineTo(Math.cos(a1)*(r+5),Math.sin(a1)*(r+5));
+    ctx.lineTo(Math.cos(a2)*(r+5),Math.sin(a2)*(r+5));
+    ctx.lineTo(Math.cos(a3)*r,Math.sin(a3)*r);
+    ctx.lineTo(Math.cos(a4)*r,Math.sin(a4)*r);
+  }
+  ctx.closePath();
+  const gg=ctx.createLinearGradient(-r,-r,r,r);
+  gg.addColorStop(0,'#c08060'); gg.addColorStop(0.5,'#e0a080'); gg.addColorStop(1,'#a06040');
+  ctx.fillStyle=gg; ctx.fill();
+  ctx.strokeStyle='rgba(80,40,20,0.5)'; ctx.lineWidth=0.8; ctx.stroke();
+  // Inner hub
+  ctx.beginPath(); ctx.arc(0,0,r*0.55,0,Math.PI*2);
+  ctx.fillStyle='#180e0a'; ctx.fill();
+  ctx.strokeStyle='rgba(180,120,60,0.4)'; ctx.lineWidth=1; ctx.stroke();
+  // Spokes
+  for(let i=0;i<5;i++){
+    const sa=(i*72)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(sa)*(r*0.55),Math.sin(sa)*(r*0.55));
+    ctx.lineTo(Math.cos(sa)*(r*0.85),Math.sin(sa)*(r*0.85));
+    ctx.strokeStyle='rgba(180,120,60,0.35)'; ctx.lineWidth=5; ctx.lineCap='round'; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSmallGear(gx,gy,r,teeth,angle,speed){
+  ctx.save(); ctx.translate(gx,gy); ctx.rotate(angle*speed);
+  ctx.beginPath();
+  for(let i=0;i<teeth;i++){
+    const a1=(i/teeth)*Math.PI*2;
+    const a2=((i+0.35)/teeth)*Math.PI*2;
+    const a3=((i+0.5)/teeth)*Math.PI*2;
+    const a4=((i+0.85)/teeth)*Math.PI*2;
+    ctx.lineTo(Math.cos(a1)*(r+4),Math.sin(a1)*(r+4));
+    ctx.lineTo(Math.cos(a2)*(r+4),Math.sin(a2)*(r+4));
+    ctx.lineTo(Math.cos(a3)*r,Math.sin(a3)*r);
+    ctx.lineTo(Math.cos(a4)*r,Math.sin(a4)*r);
+  }
+  ctx.closePath();
+  const gg=ctx.createRadialGradient(0,0,0,0,0,r);
+  gg.addColorStop(0,'#e0a878'); gg.addColorStop(1,'#b07050');
+  ctx.fillStyle=gg; ctx.fill();
+  ctx.strokeStyle='rgba(80,40,20,0.4)'; ctx.lineWidth=0.6; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,0,r*0.35,0,Math.PI*2);
+  ctx.fillStyle='#180e0a'; ctx.fill();
+  ctx.restore();
+}
+
+function drawBridges(){
+  // Movement bridges — decorative arcs
+  ctx.strokeStyle='rgba(180,120,60,0.18)'; ctx.lineWidth=8; ctx.lineCap='round';
+  const bridges=[
+    [CX-90,CY+20,CX+40,CY-90],
+    [CX-30,CY+100,CX+90,CY-30],
+    [CX-80,CY-80,CX+10,CY+80],
+  ];
+  for(const [x1,y1,x2,y2] of bridges){
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  }
+  // Perforated circles on bridges
+  ctx.fillStyle='#100806';
+  const holes=[[CX-40,CY-20],[CX+20,CY+30],[CX-10,CY+60],[CX+50,CY-50]];
+  for(const [hx,hy] of holes){
+    ctx.beginPath(); ctx.arc(hx,hy,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(hx,hy,6,0,Math.PI*2);
+    ctx.strokeStyle='rgba(180,120,60,0.2)'; ctx.lineWidth=1; ctx.stroke();
+  }
+}
+
+function drawChapterRing(){
+  // Outer chapter ring with indices
+  for(let i=0;i<60;i++){
+    const a=(i*6-90)*Math.PI/180;
+    const r1=175, r2=i%5===0?162:168;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*r1,CY+Math.sin(a)*r1);
+    ctx.lineTo(CX+Math.cos(a)*r2,CY+Math.sin(a)*r2);
+    ctx.strokeStyle='rgba(180,120,60,0.5)';
+    ctx.lineWidth=i%5===0?2:0.8; ctx.stroke();
+  }
+  ctx.font=`${W*0.032}px Georgia`;
+  ctx.fillStyle='rgba(200,140,80,0.6)';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const qtr=[{t:'12',h:12},{t:'3',h:3},{t:'6',h:6},{t:'9',h:9}];
+  for(const n of qtr){
+    const a=(n.h*30-90)*Math.PI/180;
+    ctx.fillText(n.t,CX+Math.cos(a)*150,CY+Math.sin(a)*150);
+  }
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(200,140,80,0.5)';
+  ctx.font=`${W*0.036}px Georgia`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('LATTICE',CX+55,CY+55);
+  ctx.font=`${W*0.018}px Georgia`;
+  ctx.fillStyle='rgba(180,120,60,0.35)';
+  ctx.fillText('SQUELETTE',CX+55,CY+70);
+}
+
+function drawHand(angle,len,w){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  const g=ctx.createLinearGradient(-w/2,0,w/2,0);
+  g.addColorStop(0,'#a06040'); g.addColorStop(0.4,'#e8b080');
+  g.addColorStop(0.6,'#f0c090'); g.addColorStop(1,'#a06040');
+  ctx.fillStyle=g;
+  // Hollow center portion
+  ctx.beginPath();
+  ctx.moveTo(-w/2,12); ctx.lineTo(-w/2,0);
+  ctx.lineTo(-w/4,-len*0.5); ctx.lineTo(0,-len);
+  ctx.lineTo(w/4,-len*0.5); ctx.lineTo(w/2,0);
+  ctx.lineTo(w/2,12); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle='rgba(80,40,10,0.4)'; ctx.lineWidth=0.8; ctx.stroke();
+  // Cutout
+  ctx.beginPath(); ctx.rect(-w/4+1,-len*0.48,w/2-2,len*0.3);
+  ctx.fillStyle='rgba(16,8,6,0.7)'; ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+  const elapsed=(now.getHours()*3600+m*60+s+ms/1000);
+
+  drawBG(); drawBridges();
+  drawMainspring(elapsed);
+  drawSmallGear(CX+62,CY-62,28,18,elapsed,0.3);
+  drawSmallGear(CX+60,CY+40,20,14,elapsed,-0.8);
+  drawSmallGear(CX-40,CY+65,16,12,elapsed,1.5);
+  drawChapterRing(); drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(200,120,50,0.4)'; ctx.shadowBlur=8;
+  drawHand(ha,88,12);
+  drawHand(ma,130,8);
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+
+  // Seconds — thin needle
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(sa);
+  ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-148);
+  ctx.strokeStyle='rgba(255,160,80,0.85)'; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+  ctx.restore();
+
+  const cg=ctx.createRadialGradient(CX,CY,0,CX,CY,7);
+  cg.addColorStop(0,'#f0c090'); cg.addColorStop(1,'#804020');
+  ctx.beginPath(); ctx.arc(CX,CY,7,0,Math.PI*2);
+  ctx.fillStyle=cg; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

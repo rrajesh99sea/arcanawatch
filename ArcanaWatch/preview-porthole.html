@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Porthole — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+const c = document.getElementById('w');
+const ctx = c.getContext('2d');
+const W=396, H=484, CX=W/2, CY=H/2;
+
+function clip() {
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(0,0,W,H,55);
+  ctx.clip();
+}
+
+function octPath(cx,cy,r,offset=0) {
+  ctx.beginPath();
+  for(let i=0;i<8;i++){
+    const a=(i*45+offset)*Math.PI/180;
+    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+}
+
+function drawBG() {
+  ctx.fillStyle='#0a0a0a';
+  ctx.fillRect(0,0,W,H);
+}
+
+function drawCase() {
+  // Outer octagonal case
+  octPath(CX,CY,188,22.5);
+  const g=ctx.createLinearGradient(CX-188,CY-188,CX+188,CY+188);
+  g.addColorStop(0,'#e0e0e0');g.addColorStop(0.3,'#a0a0a0');
+  g.addColorStop(0.5,'#c8c8c8');g.addColorStop(0.7,'#888');
+  g.addColorStop(1,'#d0d0d0');
+  ctx.fillStyle=g; ctx.fill();
+
+  // Inner octagon ring
+  octPath(CX,CY,175,22.5);
+  ctx.strokeStyle='#555'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#1a2a3a'; ctx.fill();
+
+  // Screws at each corner
+  for(let i=0;i<8;i++){
+    const a=(i*45+22.5)*Math.PI/180;
+    const sx=CX+Math.cos(a)*179, sy=CY+Math.sin(a)*179;
+    ctx.beginPath(); ctx.arc(sx,sy,5,0,Math.PI*2);
+    const sg=ctx.createRadialGradient(sx-1,sy-1,0,sx,sy,5);
+    sg.addColorStop(0,'#ddd'); sg.addColorStop(1,'#666');
+    ctx.fillStyle=sg; ctx.fill();
+    ctx.strokeStyle='#333'; ctx.lineWidth=0.5; ctx.stroke();
+    // Cross slot
+    ctx.beginPath(); ctx.moveTo(sx-3,sy); ctx.lineTo(sx+3,sy);
+    ctx.moveTo(sx,sy-3); ctx.lineTo(sx,sy+3);
+    ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=0.8; ctx.stroke();
+  }
+}
+
+function drawDial() {
+  // Clipped dial area
+  ctx.save();
+  octPath(CX,CY,170,22.5);
+  ctx.clip();
+
+  // Horizontal stripe texture
+  ctx.fillStyle='#2d4d6a'; ctx.fill();
+  octPath(CX,CY,170,22.5); ctx.clip();
+  ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=2;
+  for(let y=CY-180;y<CY+180;y+=4){
+    ctx.beginPath(); ctx.moveTo(CX-180,y); ctx.lineTo(CX+180,y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawIndices() {
+  const R=152;
+  for(let i=0;i<12;i++){
+    if(i===0||i===3||i===6||i===9) continue; // skip numeral positions
+    const a=(i*30-90)*Math.PI/180;
+    const x1=CX+Math.cos(a)*R, y1=CY+Math.sin(a)*R;
+    const x2=CX+Math.cos(a)*(R-14), y2=CY+Math.sin(a)*(R-14);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle='#c8c8c8'; ctx.lineWidth=3; ctx.lineCap='round'; ctx.stroke();
+  }
+  // Minute ticks
+  for(let i=0;i<60;i++){
+    if(i%5===0) continue;
+    const a=(i*6-90)*Math.PI/180;
+    const x1=CX+Math.cos(a)*R, y1=CY+Math.sin(a)*R;
+    const x2=CX+Math.cos(a)*(R-6), y2=CY+Math.sin(a)*(R-6);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle='rgba(200,200,200,0.5)'; ctx.lineWidth=1; ctx.stroke();
+  }
+  // Arabic numerals
+  ctx.fillStyle='#e0e0e0'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const nums=[{t:'12',h:12},{t:'3',h:3},{t:'6',h:6},{t:'9',h:9}];
+  ctx.font=`bold ${W*0.06}px Arial, sans-serif`;
+  for(const n of nums){
+    const a=(n.h*30-90)*Math.PI/180;
+    const nr=R-22;
+    ctx.fillText(n.t,CX+Math.cos(a)*nr,CY+Math.sin(a)*nr);
+  }
+}
+
+function drawDate(day) {
+  const dx=CX+95, dy=CY;
+  const dw=34, dh=22;
+  ctx.fillStyle='#e8e8e0';
+  ctx.fillRect(dx-dw/2,dy-dh/2,dw,dh);
+  ctx.strokeStyle='#888'; ctx.lineWidth=1;
+  ctx.strokeRect(dx-dw/2,dy-dh/2,dw,dh);
+  ctx.fillStyle='#1a1a1a';
+  ctx.font=`bold ${W*0.045}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(day),dx,dy+1);
+}
+
+function drawHand(angle,len,baseW,color) {
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  const g=ctx.createLinearGradient(-baseW/2,0,baseW/2,0);
+  g.addColorStop(0,'#999'); g.addColorStop(0.4,'#eee'); g.addColorStop(0.6,'#eee'); g.addColorStop(1,'#999');
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(-baseW/2,10); ctx.lineTo(-baseW/2,0);
+  ctx.lineTo(-baseW/5,-len*0.55); ctx.lineTo(0,-len);
+  ctx.lineTo(baseW/5,-len*0.55); ctx.lineTo(baseW/2,0);
+  ctx.lineTo(baseW/2,10); ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=0.5; ctx.stroke();
+  ctx.restore();
+}
+
+function drawCenter() {
+  const g=ctx.createRadialGradient(CX-1,CY-1,0,CX,CY,6);
+  g.addColorStop(0,'#fff'); g.addColorStop(0.5,'#aaa'); g.addColorStop(1,'#555');
+  ctx.beginPath(); ctx.arc(CX,CY,6,0,Math.PI*2);
+  ctx.fillStyle=g; ctx.fill();
+}
+
+// Brand text
+function drawBrand() {
+  ctx.fillStyle='rgba(200,220,240,0.7)';
+  ctx.font=`${W*0.038}px Georgia, serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('PORTHOLE',CX,CY-50);
+  ctx.font=`${W*0.022}px Georgia, serif`;
+  ctx.fillText('AUTOMATIC',CX,CY-35);
+}
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  clip();
+  drawBG(); drawCase(); drawDial(); drawIndices();
+
+  const now=new Date();
+  const h=now.getHours()%12, m=now.getMinutes(), s=now.getSeconds();
+  const ms=now.getMilliseconds();
+
+  drawDate(now.getDate());
+  drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=8; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
+  drawHand(ha,90,14,'#ccc');
+  drawHand(ma,128,10,'#ccc');
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;
+
+  // Seconds
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(sa);
+  ctx.beginPath(); ctx.moveTo(0,15); ctx.lineTo(0,-138);
+  ctx.strokeStyle='#ff4444'; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+  ctx.restore();
+
+  drawCenter();
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

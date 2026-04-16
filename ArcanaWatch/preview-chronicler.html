@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chronicler — Watch Face Preview</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#111; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  canvas { border-radius:55px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+</style>
+</head>
+<body>
+<canvas id="w" width="396" height="484"></canvas>
+<script>
+const c=document.getElementById('w');
+const ctx=c.getContext('2d');
+const W=396,H=484,CX=W/2,CY=H/2;
+
+function clip(){ctx.save();ctx.beginPath();ctx.roundRect(0,0,W,H,55);ctx.clip();}
+
+function drawBG(){
+  // Tachymeter outer ring
+  const g=ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#181818'); g.addColorStop(1,'#0a0a0a');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // Outer case
+  const cg=ctx.createLinearGradient(CX-192,CY-192,CX+192,CY+192);
+  cg.addColorStop(0,'#c8c8c8'); cg.addColorStop(0.4,'#888');
+  cg.addColorStop(0.6,'#aaa'); cg.addColorStop(1,'#c0c0c0');
+  ctx.beginPath(); ctx.arc(CX,CY,192,0,Math.PI*2);
+  ctx.fillStyle=cg; ctx.fill();
+}
+
+function drawTachymeter(){
+  // Black tachymeter bezel
+  ctx.beginPath(); ctx.arc(CX,CY,188,0,Math.PI*2);
+  ctx.arc(CX,CY,168,0,Math.PI*2,true); ctx.closePath();
+  ctx.fillStyle='#111'; ctx.fill();
+  // Tachymeter numbers (50-300)
+  const tachs=[300,250,200,180,160,140,130,120,110,100,90,85,80,75,70,65,60,55,50];
+  const angles=[90,108,126,135,144,155,165,175,186,198,210,222,234,246,260,274,288,305,324];
+  ctx.font=`${W*0.022}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  for(let i=0;i<tachs.length;i++){
+    const a=(angles[i]-90)*Math.PI/180;
+    ctx.fillText(String(tachs[i]),CX+Math.cos(a)*178,CY+Math.sin(a)*178);
+  }
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.font=`${W*0.02}px Arial`;
+  ctx.fillText('TACH',CX+Math.cos((-90)*Math.PI/180)*178,CY+Math.sin((-90)*Math.PI/180)*178);
+}
+
+function drawDial(){
+  // Black main dial
+  ctx.beginPath(); ctx.arc(CX,CY,166,0,Math.PI*2);
+  ctx.fillStyle='#0f0f0f'; ctx.fill();
+  ctx.strokeStyle='#333'; ctx.lineWidth=1; ctx.stroke();
+  // Inner chapter ring
+  for(let i=0;i<60;i++){
+    const a=(i*6-90)*Math.PI/180;
+    const r1=163, r2=i%5===0?152:158;
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a)*r1,CY+Math.sin(a)*r1);
+    ctx.lineTo(CX+Math.cos(a)*r2,CY+Math.sin(a)*r2);
+    ctx.strokeStyle=i%5===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.25)';
+    ctx.lineWidth=i%5===0?2:1; ctx.stroke();
+  }
+}
+
+function drawSubdial(cx,cy,r,label,angle,maxVal){
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#161616'; ctx.fill();
+  ctx.strokeStyle='#3a3a3a'; ctx.lineWidth=1; ctx.stroke();
+  // Ticks
+  for(let i=0;i<=maxVal;i+=maxVal/5){
+    const a=(i/maxVal*240+150-90)*Math.PI/180;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*(r-2),cy+Math.sin(a)*(r-2));
+    ctx.lineTo(cx+Math.cos(a)*(r-8),cy+Math.sin(a)*(r-8));
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+    if(i>0&&i<maxVal){
+      ctx.font=`${W*0.022}px Arial`; ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(String(i),cx+Math.cos(a)*(r-16),cy+Math.sin(a)*(r-16));
+    }
+  }
+  // Label
+  ctx.font=`${W*0.024}px Arial`; ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label,cx,cy+r*0.35);
+  // Hand
+  const a2=(angle/maxVal*240+150-90)*Math.PI/180;
+  ctx.beginPath();
+  ctx.moveTo(cx-Math.cos(a2)*(r*0.2),cy-Math.sin(a2)*(r*0.2));
+  ctx.lineTo(cx+Math.cos(a2)*(r*0.75),cy+Math.sin(a2)*(r*0.75));
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
+  ctx.fillStyle='#fff'; ctx.fill();
+}
+
+function drawMainIndices(){
+  const R=142;
+  for(let i=0;i<12;i++){
+    if(i===3||i===6||i===9) continue; // subdial positions
+    const a=(i*30-90)*Math.PI/180;
+    const x1=CX+Math.cos(a)*R,y1=CY+Math.sin(a)*R;
+    const x2=CX+Math.cos(a)*(R-14),y2=CY+Math.sin(a)*(R-14);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=i===0?4:3; ctx.lineCap='round'; ctx.stroke();
+  }
+}
+
+function drawBrand(){
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.font=`${W*0.04}px Georgia`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('CHRONICLER',CX,CY-30);
+  ctx.font=`${W*0.02}px Georgia`;
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.fillText('MANUAL WIND · 17 JEWELS',CX,CY-16);
+}
+
+function drawHand(angle,len,w,color){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  const g=ctx.createLinearGradient(-w/2,0,w/2,0);
+  g.addColorStop(0,'#777'); g.addColorStop(0.4,color); g.addColorStop(0.6,color); g.addColorStop(1,'#777');
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(-w/2,14); ctx.lineTo(-w/2,0);
+  ctx.lineTo(-1,-len); ctx.lineTo(1,-len); ctx.lineTo(w/2,0);
+  ctx.lineTo(w/2,14); ctx.closePath();
+  ctx.fill();
+  ctx.shadowColor='transparent';
+  ctx.restore();
+}
+
+function drawSecondsHand(angle){
+  ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-150);
+  ctx.strokeStyle='#ff2200'; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,-138,4,0,Math.PI*2);
+  ctx.fillStyle='#ff2200'; ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  clip();
+  const now=new Date();
+  const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds(),ms=now.getMilliseconds();
+
+  drawBG(); drawTachymeter(); drawDial(); drawMainIndices();
+
+  // Three subdials: running seconds (9), 30min counter (12 top), 12hr (6)
+  const sd=s+ms/1000;
+  drawSubdial(CX-90,CY,42,'S',sd,60);         // 9 o'clock - running seconds
+  drawSubdial(CX,CY-80,42,'30',m%30,30);       // 12 o'clock - 30min
+  drawSubdial(CX+90,CY,42,'12',h,12);          // 3 o'clock - 12hr
+
+  drawBrand();
+
+  const ha=((h+m/60)*30-90)*Math.PI/180;
+  const ma=((m+s/60)*6-90)*Math.PI/180;
+  const sa=((s+ms/1000)*6-90)*Math.PI/180;
+
+  ctx.shadowColor='rgba(0,0,0,0.7)'; ctx.shadowBlur=8; ctx.shadowOffsetY=2;
+  drawHand(ha,90,10,'#e0e0e0');
+  drawHand(ma,130,8,'#e0e0e0');
+  ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+  drawSecondsHand(sa);
+
+  ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2);
+  ctx.fillStyle='#ff2200'; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,2,0,Math.PI*2);
+  ctx.fillStyle='#111'; ctx.fill();
+
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
