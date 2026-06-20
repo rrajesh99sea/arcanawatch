@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ArcanaWatch — Design Studio</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1f;
+    color: #e8e8ec;
+    font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: #f5f5f7;
+    margin-bottom: 4px;
+    letter-spacing: 0.2px;
+  }
+  .sub {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 460px minmax(0, 1fr);
+    gap: 24px;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .stage {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    background: #0f0f12;
+    border: 1px solid #2a2a30;
+    border-radius: 18px;
+    padding: 20px;
+  }
+  .face-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .face-tab {
+    flex: 1;
+    min-width: 70px;
+    padding: 8px 10px;
+    background: #1c1c22;
+    color: #aaa;
+    border: 1px solid #2a2a30;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    transition: 120ms;
+  }
+  .face-tab:hover { background: #25252c; color: #fff; }
+  .face-tab.active {
+    background: #2a5cd6;
+    color: #fff;
+    border-color: #4a7ce6;
+  }
+  .canvas-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  canvas#stage {
+    width: 396px;
+    height: 484px;
+    border-radius: 55px;
+    box-shadow: 0 8px 36px rgba(0,0,0,0.7);
+  }
+  .stage-info {
+    text-align: center;
+    color: #888;
+    font-size: 11px;
+    font-family: "SF Mono", monospace;
+  }
+  .panel {
+    background: #14141a;
+    border: 1px solid #2a2a30;
+    border-radius: 18px;
+    padding: 24px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .panel-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff;
+  }
+  .panel-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 7px 14px;
+    background: #25252c;
+    color: #e8e8ec;
+    border: 1px solid #34343c;
+    border-radius: 7px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 120ms;
+  }
+  .btn:hover { background: #2f2f37; }
+  .btn.primary {
+    background: #2a5cd6;
+    border-color: #4a7ce6;
+  }
+  .btn.primary:hover { background: #3568df; }
+  .btn.warn {
+    background: #4a2222;
+    border-color: #6a3232;
+  }
+  .group {
+    margin-bottom: 22px;
+  }
+  .group-label {
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #2a2a30;
+  }
+  .control {
+    display: grid;
+    grid-template-columns: 160px 1fr 70px;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 12px;
+  }
+  .control label {
+    color: #ccc;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .control input[type="range"] {
+    width: 100%;
+    accent-color: #4a7ce6;
+  }
+  .control input[type="color"] {
+    width: 100%;
+    height: 26px;
+    background: #0f0f12;
+    border: 1px solid #2a2a30;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .control .value {
+    color: #888;
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    text-align: right;
+  }
+  .export-area {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background: #0f0f12;
+    color: #c8c8cc;
+    border: 1px solid #2a2a30;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    min-height: 220px;
+    max-height: 420px;
+    margin-top: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+  }
+  details { margin-top: 14px; }
+  summary {
+    cursor: pointer;
+    color: #aaa;
+    font-size: 12px;
+    padding: 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>ArcanaWatch Design Studio</h1>
+<div class="sub">Live preview of all 5 watch faces with adjustable parameters. Tweak, then click <b>Export</b> to copy values back into the Swift files.</div>
+
+<div class="layout">
+
+  <!-- LEFT: live canvas -->
+  <div class="stage">
+    <div class="face-tabs" id="faceTabs"></div>
+    <div class="canvas-wrap">
+      <canvas id="stage" width="396" height="484"></canvas>
+    </div>
+    <div class="stage-info">396 × 484 · Apple Watch Series 11 (46mm)</div>
+  </div>
+
+  <!-- RIGHT: control panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title" id="panelTitle">Airfield</div>
+      <span class="panel-subtitle" id="panelSubtitle">Type B pilot watch</span>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="btnExport">Export Swift values</button>
+      <button class="btn" id="btnReset">Reset to defaults</button>
+      <button class="btn warn" id="btnClearStorage">Clear saved values</button>
+    </div>
+
+    <div id="controlPanel"></div>
+
+    <details>
+      <summary>Show export output</summary>
+      <pre class="export-area" id="exportArea">// Click "Export Swift values" to populate.</pre>
+    </details>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   ArcanaWatch Design Studio
+   - 5 watch faces (Airfield, Chronicler, Depths, Meridian, DualTime)
+   - Each face has a parameter set, a renderer, and live sliders
+   - Values persist in localStorage; export emits Swift-paste-ready snippets
+   ========================================================================== */
+
+const W = 396, H = 484, CX = W/2, CY = H/2;
+const ctx = document.getElementById('stage').getContext('2d');
+
+// --------------------------------------------------------------------------
+// Helpers
+// --------------------------------------------------------------------------
+function rad(deg) { return deg * Math.PI / 180; }
+
+function rgbaFromHex(hex, alpha=1) {
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// --------------------------------------------------------------------------
+// Face definitions — each has: name, subtitle, controls[], render()
+// Controls describe sliders. The current values live in face.params.
+// --------------------------------------------------------------------------
+
+const FACES = {
+
+  // ============= AIRFIELD =============
+  airfield: {
+    name: 'Airfield',
+    subtitle: 'Type B pilot — high-legibility instrument',
+    swiftFile: 'AirfieldWatchFaceView.swift',
+    controls: [
+      { group: 'Case', id: 'caseR',        label: 'Case radius',       type: 'range', min: 170, max: 195, step: 1,    def: 192 },
+      { group: 'Case', id: 'dialR',        label: 'Dial radius',       type: 'range', min: 160, max: 185, step: 1,    def: 178 },
+      { group: 'Case', id: 'caseTop',      label: 'Case color (top)',  type: 'color', def: '#b0b0b0' },
+      { group: 'Case', id: 'caseMid',      label: 'Case color (mid)',  type: 'color', def: '#707070' },
+      { group: 'Case', id: 'dialBg',       label: 'Dial background',   type: 'color', def: '#0d0d0d' },
+
+      { group: '24-hour scale', id: 'scaleR',     label: 'Scale tick outer R', type: 'range', min: 160, max: 185, step: 1,   def: 175 },
+      { group: '24-hour scale', id: 'scaleNumR',  label: 'Scale numeral R',    type: 'range', min: 140, max: 170, step: 1,   def: 153 },
+      { group: '24-hour scale', id: 'scaleNumSize', label: 'Scale numeral size', type: 'range', min: 0.018, max: 0.040, step: 0.001, def: 0.026 },
+
+      { group: 'Hour markers', id: 'markerR',     label: 'Marker outer R',     type: 'range', min: 125, max: 150, step: 1, def: 138 },
+      { group: 'Hour markers', id: 'numeralR',    label: '3/6/9 numeral R',    type: 'range', min: 85, max: 115, step: 1,  def: 100 },
+      { group: 'Hour markers', id: 'numeralSize', label: '3/6/9 numeral size', type: 'range', min: 0.060, max: 0.110, step: 0.002, def: 0.085 },
+
+      { group: 'Hands', id: 'hourLen',       label: 'Hour hand length',   type: 'range', min: 70, max: 105, step: 1, def: 88 },
+      { group: 'Hands', id: 'hourW',         label: 'Hour hand width',    type: 'range', min: 4, max: 10,  step: 0.5, def: 6 },
+      { group: 'Hands', id: 'minuteLen',     label: 'Minute hand length', type: 'range', min: 95, max: 140, step: 1, def: 122 },
+      { group: 'Hands', id: 'minuteW',       label: 'Minute hand width',  type: 'range', min: 3, max: 8,   step: 0.5, def: 5 },
+      { group: 'Hands', id: 'secondLen',     label: 'Second hand length', type: 'range', min: 105, max: 145, step: 1, def: 130 },
+      { group: 'Hands', id: 'accent',        label: 'Accent color',       type: 'color', def: '#ff5500' },
+    ],
+    render(ctx, p, t) {
+      const now = t;
+      const h = now.getHours()%12, m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+
+      // BG
+      ctx.fillStyle = p.dialBg; ctx.fillRect(0,0,W,H);
+      // Case
+      const g = ctx.createLinearGradient(CX-p.caseR,CY-p.caseR,CX+p.caseR,CY+p.caseR);
+      g.addColorStop(0, p.caseTop); g.addColorStop(0.5, p.caseMid); g.addColorStop(1, p.caseTop);
+      ctx.beginPath(); ctx.arc(CX,CY,p.caseR,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+      ctx.beginPath(); ctx.arc(CX,CY,p.caseR-9,0,Math.PI*2); ctx.fillStyle='#111'; ctx.fill();
+      ctx.beginPath(); ctx.arc(CX,CY,p.dialR,0,Math.PI*2); ctx.fillStyle=p.dialBg; ctx.fill();
+
+      // 24-hour scale ticks
+      for (let i=0;i<24;i++){
+        const a = rad(i*15-90);
+        const r2 = i%6===0 ? p.scaleR-15 : i%2===0 ? p.scaleR-10 : p.scaleR-7;
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*p.scaleR, CY+Math.sin(a)*p.scaleR);
+        ctx.lineTo(CX+Math.cos(a)*r2, CY+Math.sin(a)*r2);
+        ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=i%6===0?2:1; ctx.stroke();
+      }
+      // 24h numerals
+      ctx.font = `${W*p.scaleNumSize}px Arial`;
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      for (const n of [{t:'6',h:6},{t:'12',h:12},{t:'18',h:18},{t:'24',h:0}]) {
+        const a = rad(n.h*15-90);
+        ctx.fillText(n.t, CX+Math.cos(a)*p.scaleNumR, CY+Math.sin(a)*p.scaleNumR);
+      }
+
+      // Hour indices
+      const R = p.markerR;
+      for (let i=0;i<12;i++){
+        const a = rad(i*30-90);
+        if (i===0) {
+          ctx.save(); ctx.translate(CX+Math.cos(a)*(R-8), CY+Math.sin(a)*(R-8));
+          ctx.rotate(a+Math.PI/2);
+          ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(-7,4); ctx.lineTo(7,4); ctx.closePath();
+          ctx.fillStyle = '#ffffff'; ctx.fill();
+          ctx.restore();
+        } else {
+          const len = i%3===0 ? 18 : 12;
+          ctx.beginPath();
+          ctx.moveTo(CX+Math.cos(a)*R, CY+Math.sin(a)*R);
+          ctx.lineTo(CX+Math.cos(a)*(R-len), CY+Math.sin(a)*(R-len));
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = i%3===0?4:2; ctx.lineCap='square'; ctx.stroke();
+        }
+      }
+      // Minute ticks
+      for (let i=0;i<60;i++){
+        if (i%5===0) continue;
+        const a = rad(i*6-90);
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*R, CY+Math.sin(a)*R);
+        ctx.lineTo(CX+Math.cos(a)*(R-6), CY+Math.sin(a)*(R-6));
+        ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1; ctx.stroke();
+      }
+      // 3/6/9 numerals
+      ctx.font = `bold ${W*p.numeralSize}px 'Arial Black', Arial`;
+      ctx.fillStyle = '#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      for (const n of [{t:'3',h:3},{t:'6',h:6},{t:'9',h:9}]) {
+        const a = rad(n.h*30-90);
+        ctx.fillText(n.t, CX+Math.cos(a)*p.numeralR, CY+Math.sin(a)*p.numeralR);
+      }
+
+      // Hands
+      const ha = rad((h+m/60)*30-90);
+      const ma = rad((m+s/60)*6-90);
+      const sa = rad((s+ms/1000)*6-90);
+
+      ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=10;
+      this._drawSwordHand(ctx, ha, p.hourLen, p.hourW, '#fff');
+      this._drawSwordHand(ctx, ma, p.minuteLen, p.minuteW, '#fff');
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(sa);
+      ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-p.secondLen);
+      ctx.strokeStyle = p.accent; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,-p.secondLen+15,6,0,Math.PI*2); ctx.fillStyle=p.accent; ctx.fill();
+      ctx.restore();
+
+      ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2); ctx.fillStyle=p.accent; ctx.fill();
+    },
+    _drawSwordHand(ctx, angle, len, w, color) {
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-w/2,12); ctx.lineTo(-w/2,0);
+      ctx.lineTo(-w/2,-(len*0.4)); ctx.lineTo(-w*1.2,-(len*0.4));
+      ctx.lineTo(-w*1.2,-(len*0.55)); ctx.lineTo(-w/2,-(len*0.55));
+      ctx.lineTo(-w/2,-len); ctx.lineTo(w/2,-len);
+      ctx.lineTo(w/2,-(len*0.55)); ctx.lineTo(w*1.2,-(len*0.55));
+      ctx.lineTo(w*1.2,-(len*0.4)); ctx.lineTo(w/2,-(len*0.4));
+      ctx.lineTo(w/2,0); ctx.lineTo(w/2,12); ctx.closePath();
+      ctx.fillStyle = color; ctx.fill();
+      ctx.restore();
+    },
+  },
+
+  // ============= CHRONICLER =============
+  chronicler: {
+    name: 'Chronicler',
+    subtitle: 'Tachymeter w/ battery, weekday, day-of-month',
+    swiftFile: 'ChroniclerWatchFaceView.swift',
+    controls: [
+      { group: 'Case',     id: 'caseR',       label: 'Case radius',         type: 'range', min: 175, max: 195, step: 1, def: 192 },
+      { group: 'Case',     id: 'dialR',       label: 'Inner dial radius',   type: 'range', min: 150, max: 175, step: 1, def: 166 },
+      { group: 'Case',     id: 'dialBg',      label: 'Dial color',          type: 'color', def: '#0f0f0f' },
+
+      { group: 'Tachymeter', id: 'tachR',     label: 'Tachymeter outer R',  type: 'range', min: 175, max: 195, step: 1, def: 188 },
+      { group: 'Tachymeter', id: 'tachInnerR', label: 'Tachymeter inner R', type: 'range', min: 155, max: 175, step: 1, def: 168 },
+      { group: 'Tachymeter', id: 'tachNumR',  label: 'Tach number radius',  type: 'range', min: 165, max: 185, step: 1, def: 178 },
+      { group: 'Tachymeter', id: 'tachNumSize', label: 'Tach number size',  type: 'range', min: 0.018, max: 0.030, step: 0.001, def: 0.022 },
+
+      { group: 'Indices',  id: 'indexR',      label: 'Index outer R',       type: 'range', min: 130, max: 150, step: 1, def: 142 },
+      { group: 'Indices',  id: 'indexLen',    label: 'Index length',        type: 'range', min: 8, max: 20, step: 1,    def: 14 },
+
+      { group: 'Hands',    id: 'hourLen',     label: 'Hour hand length',    type: 'range', min: 70, max: 110, step: 1, def: 90 },
+      { group: 'Hands',    id: 'hourW',       label: 'Hour hand width',     type: 'range', min: 6, max: 14, step: 0.5, def: 10 },
+      { group: 'Hands',    id: 'minuteLen',   label: 'Minute hand length',  type: 'range', min: 100, max: 145, step: 1, def: 130 },
+      { group: 'Hands',    id: 'minuteW',     label: 'Minute hand width',   type: 'range', min: 5, max: 12, step: 0.5, def: 8 },
+      { group: 'Hands',    id: 'secondLen',   label: 'Second hand length',  type: 'range', min: 120, max: 160, step: 1, def: 150 },
+      { group: 'Hands',    id: 'accent',      label: 'Second/center color', type: 'color', def: '#ff2200' },
+    ],
+    render(ctx, p, t) {
+      const now = t;
+      const h = now.getHours()%12, m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+
+      // BG
+      const g = ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,'#181818'); g.addColorStop(1,'#0a0a0a');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+      // Case
+      const cg = ctx.createLinearGradient(CX-p.caseR,CY-p.caseR,CX+p.caseR,CY+p.caseR);
+      cg.addColorStop(0,'#c8c8c8'); cg.addColorStop(0.4,'#888'); cg.addColorStop(0.6,'#aaa'); cg.addColorStop(1,'#c0c0c0');
+      ctx.beginPath(); ctx.arc(CX,CY,p.caseR,0,Math.PI*2); ctx.fillStyle=cg; ctx.fill();
+
+      // Tachymeter ring
+      ctx.beginPath(); ctx.arc(CX,CY,p.tachR,0,Math.PI*2);
+      ctx.arc(CX,CY,p.tachInnerR,0,Math.PI*2,true); ctx.closePath();
+      ctx.fillStyle='#111'; ctx.fill();
+      const tachs=[300,250,200,180,160,140,130,120,110,100,90,85,80,75,70,65,60,55,50];
+      const angles=[90,108,126,135,144,155,165,175,186,198,210,222,234,246,260,274,288,305,324];
+      ctx.font=`${W*p.tachNumSize}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(255,255,255,0.6)';
+      for (let i=0;i<tachs.length;i++){
+        const a = rad(angles[i]-90);
+        ctx.fillText(String(tachs[i]), CX+Math.cos(a)*p.tachNumR, CY+Math.sin(a)*p.tachNumR);
+      }
+      ctx.fillStyle='rgba(255,255,255,0.4)';
+      ctx.font=`${W*0.020}px Arial`;
+      ctx.fillText('TACH', CX+Math.cos(rad(-90))*p.tachNumR, CY+Math.sin(rad(-90))*p.tachNumR);
+
+      // Inner dial
+      ctx.beginPath(); ctx.arc(CX,CY,p.dialR,0,Math.PI*2); ctx.fillStyle=p.dialBg; ctx.fill();
+      ctx.strokeStyle='#333'; ctx.lineWidth=1; ctx.stroke();
+
+      // Chapter ring
+      for (let i=0;i<60;i++){
+        const a = rad(i*6-90);
+        const r1 = p.dialR-3, r2 = i%5===0 ? p.dialR-14 : p.dialR-8;
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*r1, CY+Math.sin(a)*r1);
+        ctx.lineTo(CX+Math.cos(a)*r2, CY+Math.sin(a)*r2);
+        ctx.strokeStyle = i%5===0 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = i%5===0 ? 2 : 1; ctx.stroke();
+      }
+
+      // Indices
+      for (let i=0;i<12;i++){
+        const a = rad(i*30-90);
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*p.indexR, CY+Math.sin(a)*p.indexR);
+        ctx.lineTo(CX+Math.cos(a)*(p.indexR-p.indexLen), CY+Math.sin(a)*(p.indexR-p.indexLen));
+        ctx.strokeStyle='#fff'; ctx.lineWidth=i===0?4:3; ctx.lineCap='round'; ctx.stroke();
+      }
+
+      // Hands
+      const ha = rad((h+m/60)*30-90);
+      const ma = rad((m+s/60)*6-90);
+      const sa = rad((s+ms/1000)*6-90);
+      ctx.shadowColor='rgba(0,0,0,0.7)'; ctx.shadowBlur=8; ctx.shadowOffsetY=2;
+      this._drawDauphine(ctx, ha, p.hourLen, p.hourW, '#e0e0e0');
+      this._drawDauphine(ctx, ma, p.minuteLen, p.minuteW, '#e0e0e0');
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+      // Seconds
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(sa);
+      ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-p.secondLen);
+      ctx.strokeStyle=p.accent; ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,-p.secondLen+12,4,0,Math.PI*2); ctx.fillStyle=p.accent; ctx.fill();
+      ctx.restore();
+      // Center pin
+      ctx.beginPath(); ctx.arc(CX,CY,5,0,Math.PI*2); ctx.fillStyle=p.accent; ctx.fill();
+      ctx.beginPath(); ctx.arc(CX,CY,2,0,Math.PI*2); ctx.fillStyle='#111'; ctx.fill();
+    },
+    _drawDauphine(ctx, angle, len, w, color) {
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+      const g = ctx.createLinearGradient(-w/2,0,w/2,0);
+      g.addColorStop(0,'#777'); g.addColorStop(0.4,color); g.addColorStop(0.6,color); g.addColorStop(1,'#777');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(-w/2,14); ctx.lineTo(-w/2,0);
+      ctx.lineTo(-1,-len); ctx.lineTo(1,-len); ctx.lineTo(w/2,0);
+      ctx.lineTo(w/2,14); ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    },
+  },
+
+  // ============= DEPTHS =============
+  depths: {
+    name: 'Depths',
+    subtitle: 'Diver — rotating bezel & lume',
+    swiftFile: 'DepthsWatchFaceView.swift',
+    controls: [
+      { group: 'Bezel', id: 'bezelOuterR', label: 'Bezel outer radius',    type: 'range', min: 180, max: 195, step: 1, def: 192 },
+      { group: 'Bezel', id: 'bezelInnerR', label: 'Bezel inner radius',    type: 'range', min: 160, max: 180, step: 1, def: 172 },
+      { group: 'Bezel', id: 'rotateWithSeconds', label: 'Rotate with seconds (anim)', type: 'range', min: 0, max: 1, step: 1, def: 0 },
+
+      { group: 'Dial',  id: 'dialR',       label: 'Dial radius',           type: 'range', min: 150, max: 180, step: 1, def: 170 },
+      { group: 'Dial',  id: 'dialColor1',  label: 'Dial color (center)',   type: 'color', def: '#0a1a0a' },
+      { group: 'Dial',  id: 'dialColor2',  label: 'Dial color (edge)',     type: 'color', def: '#040a04' },
+      { group: 'Dial',  id: 'lumeColor',   label: 'Lume color',            type: 'color', def: '#b4ffb4' },
+
+      { group: 'Markers', id: 'markerR',   label: 'Marker outer R',        type: 'range', min: 130, max: 160, step: 1, def: 148 },
+
+      { group: 'Hands', id: 'hourLen',     label: 'Hour hand length',      type: 'range', min: 75, max: 105, step: 1, def: 92 },
+      { group: 'Hands', id: 'hourW',       label: 'Hour hand width',       type: 'range', min: 7, max: 14,  step: 0.5, def: 10 },
+      { group: 'Hands', id: 'minuteLen',   label: 'Minute hand length',    type: 'range', min: 110, max: 145, step: 1, def: 130 },
+      { group: 'Hands', id: 'minuteW',     label: 'Minute hand width',     type: 'range', min: 6, max: 12,  step: 0.5, def: 8 },
+      { group: 'Hands', id: 'secondLen',   label: 'Second hand length',    type: 'range', min: 115, max: 150, step: 1, def: 140 },
+      { group: 'Hands', id: 'accent',      label: 'Accent color',          type: 'color', def: '#ff3300' },
+    ],
+    render(ctx, p, t) {
+      const now = t;
+      const h = now.getHours()%12, m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+      ctx.fillStyle='#050505'; ctx.fillRect(0,0,W,H);
+
+      // Bezel
+      ctx.save(); ctx.translate(CX,CY);
+      const bezelRot = p.rotateWithSeconds ? rad((s+ms/1000)*6) : 0;
+      ctx.rotate(bezelRot);
+      ctx.beginPath(); ctx.arc(0,0,p.bezelOuterR,0,Math.PI*2);
+      ctx.arc(0,0,p.bezelInnerR,0,Math.PI*2,true); ctx.closePath();
+      ctx.fillStyle='#111'; ctx.fill();
+      const lumeColor = p.lumeColor;
+      const lumeRGBA = rgbaFromHex(lumeColor, 0.6);
+      const lumeRGBABright = rgbaFromHex(lumeColor, 0.7);
+      for (let i=0;i<60;i++){
+        const a = rad(i*6-90);
+        const r1 = p.bezelOuterR-2;
+        const r2 = i===0 ? p.bezelOuterR-16 : i%5===0 ? p.bezelOuterR-10 : p.bezelOuterR-6;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*r1, Math.sin(a)*r1);
+        ctx.lineTo(Math.cos(a)*r2, Math.sin(a)*r2);
+        ctx.strokeStyle = i===0 ? p.accent : lumeRGBA;
+        ctx.lineWidth = i===0 ? 3 : i%5===0 ? 2 : 1; ctx.stroke();
+      }
+      ctx.font=`bold ${W*0.030}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      for (let i=1;i<=5;i++){
+        const a = rad(i*60-90);
+        ctx.fillStyle = lumeRGBABright;
+        ctx.fillText(String(i*10), Math.cos(a)*(p.bezelOuterR-22), Math.sin(a)*(p.bezelOuterR-22));
+      }
+      ctx.restore();
+
+      // Dial
+      const g = ctx.createRadialGradient(CX,CY,0,CX,CY,p.dialR-2);
+      g.addColorStop(0, p.dialColor1); g.addColorStop(1, p.dialColor2);
+      ctx.beginPath(); ctx.arc(CX,CY,p.dialR,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+      ctx.strokeStyle='#1a3a1a'; ctx.lineWidth=1; ctx.stroke();
+
+      // Markers
+      const R = p.markerR;
+      for (let i=0;i<12;i++){
+        const a = rad(i*30-90);
+        ctx.save();
+        ctx.translate(CX+Math.cos(a)*(R-12), CY+Math.sin(a)*(R-12));
+        ctx.rotate(a+Math.PI/2);
+        if (i===0) {
+          ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(-6,6); ctx.lineTo(6,6); ctx.closePath();
+          ctx.fillStyle = rgbaFromHex(lumeColor, 0.9); ctx.fill();
+        } else if (i%3===0) {
+          ctx.fillStyle = rgbaFromHex(lumeColor, 0.85);
+          ctx.fillRect(-5,-14,10,28);
+        } else {
+          ctx.fillStyle = rgbaFromHex(lumeColor, 0.6);
+          ctx.fillRect(-3,-10,6,20);
+        }
+        ctx.restore();
+      }
+      // Minute ticks
+      for (let i=0;i<60;i++){
+        if (i%5===0) continue;
+        const a = rad(i*6-90);
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*R, CY+Math.sin(a)*R);
+        ctx.lineTo(CX+Math.cos(a)*(R-6), CY+Math.sin(a)*(R-6));
+        ctx.strokeStyle = rgbaFromHex(lumeColor, 0.3); ctx.lineWidth=1; ctx.stroke();
+      }
+
+      // Hands
+      const ha = rad((h+m/60)*30-90);
+      const ma = rad((m+s/60)*6-90);
+      const sa = rad((s+ms/1000)*6-90);
+      this._drawDiverHand(ctx, ha, p.hourLen, p.hourW, lumeColor);
+      this._drawDiverHand(ctx, ma, p.minuteLen, p.minuteW, lumeColor);
+      // seconds
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(sa);
+      ctx.beginPath(); ctx.moveTo(0,22); ctx.lineTo(0,-p.secondLen);
+      ctx.strokeStyle=p.accent; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,-p.secondLen+10,5,0,Math.PI*2); ctx.fillStyle=p.accent; ctx.fill();
+      ctx.restore();
+
+      ctx.beginPath(); ctx.arc(CX,CY,6,0,Math.PI*2); ctx.fillStyle=p.accent; ctx.fill();
+      ctx.beginPath(); ctx.arc(CX,CY,3,0,Math.PI*2); ctx.fillStyle='#222'; ctx.fill();
+    },
+    _drawDiverHand(ctx, angle, len, w, lumeColor) {
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+      ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=6; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
+      ctx.beginPath();
+      ctx.moveTo(-w/2,12); ctx.lineTo(-w/2,0);
+      ctx.lineTo(-w/2,-len*0.3); ctx.lineTo(-w/1.2,-len*0.3);
+      ctx.lineTo(-w/1.2,-len*0.7); ctx.lineTo(-w/2,-len*0.7);
+      ctx.lineTo(-w/2,-len); ctx.lineTo(w/2,-len);
+      ctx.lineTo(w/2,-len*0.7); ctx.lineTo(w/1.2,-len*0.7);
+      ctx.lineTo(w/1.2,-len*0.3); ctx.lineTo(w/2,-len*0.3);
+      ctx.lineTo(w/2,0); ctx.lineTo(w/2,12); ctx.closePath();
+      ctx.fillStyle='#303030'; ctx.fill();
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+      ctx.fillStyle = rgbaFromHex(lumeColor, 0.25);
+      ctx.fillRect(-w/4, -len*0.68, w/2, len*0.38);
+      ctx.fillRect(-w/4, -len, w/2, len*0.22);
+      ctx.restore();
+    },
+  },
+
+  // ============= MERIDIAN =============
+  meridian: {
+    name: 'Meridian',
+    subtitle: 'Dual-time dress watch',
+    swiftFile: 'MeridianWatchFaceView.swift',
+    controls: [
+      { group: 'Case',  id: 'caseR',     label: 'Case radius',         type: 'range', min: 175, max: 195, step: 1, def: 192 },
+      { group: 'Case',  id: 'dialR',     label: 'Dial radius',         type: 'range', min: 165, max: 188, step: 1, def: 182 },
+      { group: 'Case',  id: 'dialColor1',label: 'Dial highlight',      type: 'color', def: '#1e2848' },
+      { group: 'Case',  id: 'dialColor2',label: 'Dial shadow',         type: 'color', def: '#0e1628' },
+
+      { group: 'World ring', id: 'cityR', label: 'City label radius',  type: 'range', min: 150, max: 180, step: 1, def: 168 },
+      { group: 'World ring', id: 'citySize', label: 'City label size', type: 'range', min: 0.016, max: 0.026, step: 0.001, def: 0.020 },
+
+      { group: 'Indices', id: 'indexR',  label: 'Index radius',        type: 'range', min: 135, max: 155, step: 1, def: 148 },
+
+      { group: 'Hands', id: 'hourLen',   label: 'Hour hand length',    type: 'range', min: 75, max: 105, step: 1, def: 88 },
+      { group: 'Hands', id: 'hourW',     label: 'Hour hand width',     type: 'range', min: 8, max: 16, step: 0.5, def: 12 },
+      { group: 'Hands', id: 'minuteLen', label: 'Minute hand length',  type: 'range', min: 110, max: 145, step: 1, def: 130 },
+      { group: 'Hands', id: 'minuteW',   label: 'Minute hand width',   type: 'range', min: 6, max: 12, step: 0.5, def: 9 },
+      { group: 'Hands', id: 'secondLen', label: 'Second hand length',  type: 'range', min: 125, max: 160, step: 1, def: 148 },
+      { group: 'Hands', id: 'accent',    label: 'Accent color',        type: 'color', def: '#64a0ff' },
+    ],
+    render(ctx, p, t) {
+      const now = t;
+      const h = now.getHours()%12, m = now.getMinutes(), s = now.getSeconds(), ms = now.getMilliseconds();
+      // BG
+      const g = ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,'#1a1a2a'); g.addColorStop(1,'#0e0e1a');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      // Case
+      const cg = ctx.createLinearGradient(CX-p.caseR,CY-p.caseR,CX+p.caseR,CY+p.caseR);
+      cg.addColorStop(0,'#d0d0d8'); cg.addColorStop(0.3,'#909098');
+      cg.addColorStop(0.6,'#c0c0c8'); cg.addColorStop(1,'#a0a0a8');
+      ctx.beginPath(); ctx.arc(CX,CY,p.caseR,0,Math.PI*2); ctx.fillStyle=cg; ctx.fill();
+      // Dial
+      const dg = ctx.createRadialGradient(CX-30,CY-40,10,CX,CY,p.dialR);
+      dg.addColorStop(0, p.dialColor1); dg.addColorStop(0.7, p.dialColor1); dg.addColorStop(1, p.dialColor2);
+      ctx.beginPath(); ctx.arc(CX,CY,p.dialR,0,Math.PI*2); ctx.fillStyle=dg; ctx.fill();
+      ctx.strokeStyle='rgba(180,190,220,0.2)'; ctx.lineWidth=1; ctx.stroke();
+      // Crosshairs
+      ctx.strokeStyle='rgba(180,190,230,0.06)'; ctx.lineWidth=0.8;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(CX,CY-p.dialR); ctx.lineTo(CX,CY+p.dialR); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(CX-p.dialR,CY); ctx.lineTo(CX+p.dialR,CY); ctx.stroke();
+      ctx.setLineDash([]);
+      // World cities
+      const cities=['LON','PAR','DXB','BOM','SGP','TKY','SYD','NOU','LAX','NYC','GRU','MAD'];
+      ctx.font=`${W*p.citySize}px 'Courier New'`;
+      ctx.fillStyle='rgba(180,200,240,0.25)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      for (let i=0;i<12;i++) {
+        const a = rad(i*30-90);
+        ctx.fillText(cities[i], CX+Math.cos(a)*(p.cityR-8), CY+Math.sin(a)*(p.cityR-8));
+      }
+      // Indices
+      const R = p.indexR;
+      for (let i=0;i<12;i++){
+        const a = rad(i*30-90);
+        ctx.save();
+        ctx.translate(CX+Math.cos(a)*(R-10), CY+Math.sin(a)*(R-10));
+        ctx.rotate(a+Math.PI/2);
+        if (i===0) {
+          ctx.fillStyle='rgba(220,225,255,0.9)';
+          ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(-5,0); ctx.lineTo(0,10); ctx.lineTo(5,0); ctx.closePath();
+          ctx.fill();
+        } else {
+          const ig = ctx.createLinearGradient(-3,0,3,0);
+          ig.addColorStop(0,'rgba(140,150,200,0.5)');
+          ig.addColorStop(0.5,'rgba(200,210,255,0.8)');
+          ig.addColorStop(1,'rgba(140,150,200,0.5)');
+          ctx.fillStyle=ig;
+          ctx.fillRect(-3, i%3===0?-16:-10, 6, i%3===0?32:20);
+        }
+        ctx.restore();
+      }
+      // Minute ticks
+      for (let i=0;i<60;i++){
+        if (i%5===0) continue;
+        const a = rad(i*6-90);
+        ctx.beginPath();
+        ctx.moveTo(CX+Math.cos(a)*R, CY+Math.sin(a)*R);
+        ctx.lineTo(CX+Math.cos(a)*(R-5), CY+Math.sin(a)*(R-5));
+        ctx.strokeStyle='rgba(180,190,230,0.2)'; ctx.lineWidth=0.8; ctx.stroke();
+      }
+      // Hands
+      const ha = rad((h+m/60)*30-90);
+      const ma = rad((m+s/60)*6-90);
+      const sa = rad((s+ms/1000)*6-90);
+      ctx.shadowColor='rgba(100,120,255,0.3)'; ctx.shadowBlur=10;
+      this._drawHand(ctx, ha, p.hourLen, p.hourW);
+      this._drawHand(ctx, ma, p.minuteLen, p.minuteW);
+      ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+      // seconds
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(sa);
+      ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-p.secondLen);
+      ctx.strokeStyle = rgbaFromHex(p.accent, 0.8); ctx.lineWidth=1.5; ctx.lineCap='round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fillStyle = rgbaFromHex(p.accent, 0.9); ctx.fill();
+      ctx.restore();
+      // Center
+      const ccg = ctx.createRadialGradient(CX,CY,0,CX,CY,6);
+      ccg.addColorStop(0,'#e0e8ff'); ccg.addColorStop(1,'#4050a0');
+      ctx.beginPath(); ctx.arc(CX,CY,6,0,Math.PI*2); ctx.fillStyle=ccg; ctx.fill();
+    },
+    _drawHand(ctx, angle, len, w) {
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(angle);
+      const g = ctx.createLinearGradient(-w/2,0,w/2,0);
+      g.addColorStop(0,'rgba(200,210,255,0.9)');
+      g.addColorStop(0.5,'rgba(230,235,255,1)');
+      g.addColorStop(1,'rgba(200,210,255,0.9)');
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(-w/2,12); ctx.lineTo(-w/2,0);
+      ctx.lineTo(-w/6,-len*0.6); ctx.lineTo(0,-len);
+      ctx.lineTo(w/6,-len*0.6); ctx.lineTo(w/2,0);
+      ctx.lineTo(w/2,12); ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle='rgba(0,0,30,0.3)'; ctx.lineWidth=0.5; ctx.stroke();
+      ctx.restore();
+    },
+  },
+
+  // ============= DUAL TIME =============
+  dualTime: {
+    name: 'Dual Time',
+    subtitle: 'Four-zone analog grid — hour/minute only, time-of-day backgrounds',
+    swiftFile: 'DualTimeWatchFaceView.swift',
+    controls: [
+      { group: 'Layout', id: 'dialDiameter', label: 'Mini-dial diameter',   type: 'range', min: 110, max: 175, step: 1,    def: 163 },
+      { group: 'Layout', id: 'dialGap',      label: 'Gap between dials',    type: 'range', min: 6,   max: 30,  step: 1,    def: 12  },
+
+      { group: 'Dial',   id: 'dialRim',      label: 'Dial rim color',       type: 'color', def: '#8c919e' },
+      { group: 'Dial',   id: 'pipColor',     label: 'Hour-pip / hand color',type: 'color', def: '#d8dce9' },
+      { group: 'Dial',   id: 'rimWidth',     label: 'Rim width',            type: 'range', min: 1, max: 5, step: 0.5, def: 2.5 },
+
+      { group: 'Cities', id: 'topLeftCity',     label: 'Top-left city',    type: 'select', options: ['NYC','LON','PAR','DXB','BLR','SIN','TYO','SYD','LAX','SFO'], def: 'NYC' },
+      { group: 'Cities', id: 'topRightCity',    label: 'Top-right city',   type: 'select', options: ['NYC','LON','PAR','DXB','BLR','SIN','TYO','SYD','LAX','SFO'], def: 'LON' },
+      { group: 'Cities', id: 'bottomLeftCity',  label: 'Bottom-left city', type: 'select', options: ['NYC','LON','PAR','DXB','BLR','SIN','TYO','SYD','LAX','SFO'], def: 'BLR' },
+      { group: 'Cities', id: 'bottomRightCity', label: 'Bottom-right city',type: 'select', options: ['NYC','LON','PAR','DXB','BLR','SIN','TYO','SYD','LAX','SFO'], def: 'TYO' },
+
+      { group: 'City label', id: 'cityYRatio',    label: 'City label Y (ratio of r)',  type: 'range', min: 0.10, max: 0.35, step: 0.01, def: 0.22 },
+      { group: 'City label', id: 'citySizeRatio', label: 'City label size (ratio of d)',type: 'range', min: 0.09, max: 0.17, step: 0.005,def: 0.125},
+
+      { group: 'Hands',  id: 'hourLenRatio',   label: 'Hour hand length (ratio of r)',  type: 'range', min: 0.45, max: 0.80, step: 0.01,  def: 0.62 },
+      { group: 'Hands',  id: 'hourWRatio',     label: 'Hour hand width (ratio of r)',   type: 'range', min: 0.05, max: 0.14, step: 0.005, def: 0.09 },
+      { group: 'Hands',  id: 'minuteLenRatio', label: 'Minute hand length (ratio of r)',type: 'range', min: 0.65, max: 0.95, step: 0.01,  def: 0.84 },
+      { group: 'Hands',  id: 'minuteWRatio',   label: 'Minute hand width (ratio of r)', type: 'range', min: 0.03, max: 0.08, step: 0.005, def: 0.055},
+      { group: 'Hands',  id: 'accent',         label: 'Accent (center cap)',            type: 'color', def: '#ebc66a' },
+    ],
+    render(ctx, p, t) {
+      ctx.fillStyle = '#030508'; ctx.fillRect(0, 0, W, H);
+
+      const tzMap = {
+        NYC:'America/New_York', LON:'Europe/London', PAR:'Europe/Paris', DXB:'Asia/Dubai',
+        BLR:'Asia/Kolkata',     SIN:'Asia/Singapore',TYO:'Asia/Tokyo',   SYD:'Australia/Sydney',
+        LAX:'America/Los_Angeles', SFO:'America/Los_Angeles'
+      };
+
+      const d   = p.dialDiameter;
+      const gap = p.dialGap;
+      const lx  = CX - (d / 2 + gap / 2);
+      const rx  = CX + (d / 2 + gap / 2);
+      const ty  = CY - (d / 2 + gap / 2);
+      const by  = CY + (d / 2 + gap / 2);
+
+      const slots = [
+        { city: p.topLeftCity,     cx: lx, cy: ty },
+        { city: p.topRightCity,    cx: rx, cy: ty },
+        { city: p.bottomLeftCity,  cx: lx, cy: by },
+        { city: p.bottomRightCity, cx: rx, cy: by },
+      ];
+      for (const s of slots)
+        this._drawMiniDial(ctx, s.cx, s.cy, d, p, s.city, tzMap[s.city], t);
+    },
+    _timeOfDayBg(hour24) {
+      if (hour24 >= 22 || hour24 < 5)  return '#04080e'; // deep night
+      if (hour24 < 7)                   return '#130c1c'; // pre-dawn
+      if (hour24 < 10)                  return '#0a1520'; // morning
+      if (hour24 < 17)                  return '#0c1828'; // day
+      if (hour24 < 20)                  return '#1c0e08'; // dusk
+      return '#0c0818';                                    // evening
+    },
+    _drawMiniDial(ctx, cx, cy, d, p, code, tzId, t) {
+      const r = d / 2;
+
+      // Parse local time + date for this timezone
+      const fmt = new Intl.DateTimeFormat('en-US', {
+        timeZone: tzId, hour: 'numeric', minute: 'numeric',
+        second: 'numeric', day: 'numeric', hour12: false
+      });
+      const parts = fmt.formatToParts(t).reduce((o, pt) => {
+        if (pt.type !== 'literal') o[pt.type] = pt.value;
+        return o;
+      }, {});
+      let hh = parseInt(parts.hour, 10); if (hh === 24) hh = 0;
+      const mm  = parseInt(parts.minute, 10);
+      const ss  = parseInt(parts.second, 10) + t.getMilliseconds() / 1000;
+      const day = parseInt(parts.day, 10);
+
+      // Time-of-day background
+      const bg = this._timeOfDayBg(hh);
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bg; ctx.fill();
+
+      // Rim
+      ctx.beginPath(); ctx.arc(cx, cy, r - p.rimWidth / 2, 0, Math.PI * 2);
+      ctx.strokeStyle = rgbaFromHex(p.dialRim, 0.65);
+      ctx.lineWidth = p.rimWidth; ctx.stroke();
+
+      // Hour pips
+      for (let i = 0; i < 12; i++) {
+        const a      = rad(i * 30 - 90);
+        const pipLen = i % 3 === 0 ? r * 0.13 : r * 0.07;
+        const pipW   = Math.max(1, r * 0.034);
+        const dist   = r * 0.84 - pipLen / 2;
+        ctx.save();
+        ctx.translate(cx + Math.cos(a) * dist, cy + Math.sin(a) * dist);
+        ctx.rotate(a + Math.PI / 2);
+        ctx.fillStyle = rgbaFromHex(p.pipColor, i % 3 === 0 ? 0.9 : 0.6);
+        ctx.fillRect(-pipW / 2, -pipLen / 2, pipW, pipLen);
+        ctx.restore();
+      }
+
+      // City code label (above center)
+      ctx.font = `600 ${d * p.citySizeRatio}px -apple-system, "SF Pro Rounded", system-ui`;
+      ctx.fillStyle = rgbaFromHex(p.accent, 0.90);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(code, cx, cy + r * p.cityYRatio);
+
+      // Hands — hour and minute only (no seconds)
+      const hourAngle   = rad(((hh % 12) + mm / 60) * 30 - 90);
+      const minuteAngle = rad((mm + ss / 60) * 6 - 90);
+
+      // Hour hand
+      const hl = r * p.hourLenRatio, hw = r * p.hourWRatio;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(hourAngle + Math.PI / 2);
+      const hg = ctx.createLinearGradient(-hw / 2, 0, hw / 2, 0);
+      hg.addColorStop(0, 'rgba(150,155,170,0.9)');
+      hg.addColorStop(0.5, rgbaFromHex(p.pipColor, 0.95));
+      hg.addColorStop(1, 'rgba(150,155,170,0.9)');
+      ctx.fillStyle = hg;
+      this._capsule(ctx, -hw / 2, -hl, hw, hl);
+      ctx.fill();
+      ctx.restore();
+
+      // Minute hand
+      const ml = r * p.minuteLenRatio, mw = r * p.minuteWRatio;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(minuteAngle + Math.PI / 2);
+      const mg = ctx.createLinearGradient(-mw / 2, 0, mw / 2, 0);
+      mg.addColorStop(0, 'rgba(150,155,170,0.9)');
+      mg.addColorStop(0.5, rgbaFromHex(p.pipColor, 0.95));
+      mg.addColorStop(1, 'rgba(150,155,170,0.9)');
+      ctx.fillStyle = mg;
+      this._capsule(ctx, -mw / 2, -ml, mw, ml);
+      ctx.fill();
+      ctx.restore();
+
+      // Date box — below center, inside the dial
+      const bw = r * 0.58, bh = r * 0.30;
+      const bx = cx - bw / 2, bby = cy + r * 0.50 - bh / 2;
+      ctx.fillStyle = 'rgba(215,220,238,0.90)';
+      ctx.beginPath(); ctx.roundRect(bx, bby, bw, bh, 3); ctx.fill();
+      ctx.strokeStyle = 'rgba(90,100,135,0.45)';
+      ctx.lineWidth = 0.8; ctx.stroke();
+      ctx.fillStyle = '#0e1428';
+      ctx.font = `bold ${r * 0.26}px -apple-system, Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(day), cx, cy + r * 0.50 + 0.5);
+
+      // Center cap
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.08, 0, Math.PI * 2);
+      ctx.fillStyle = p.accent; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.038, 0, Math.PI * 2);
+      ctx.fillStyle = bg; ctx.fill();
+    },
+    _capsule(ctx, x, y, w, h) {
+      // Pill shape: (x,y) is top-left corner, w×h rectangle with semicircular caps
+      const rr = w / 2;
+      const top = h >= 0 ? y : y + h;
+      const ht  = Math.abs(h);
+      ctx.beginPath();
+      ctx.arc(x + rr, top + rr,      rr, Math.PI, 0, false); // top cap (clockwise → through top)
+      ctx.arc(x + rr, top + ht - rr, rr, 0, Math.PI, false); // bottom cap
+      ctx.closePath();
+    },
+  },
+
+};
+
+// --------------------------------------------------------------------------
+// State management
+// --------------------------------------------------------------------------
+const STORAGE_KEY = 'arcanawatch.studio.params.v1';
+let activeFace = 'airfield';
+
+function loadStored() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveStored() {
+  const out = {};
+  for (const key of Object.keys(FACES)) out[key] = FACES[key].params;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
+}
+function initParams() {
+  const stored = loadStored();
+  for (const key of Object.keys(FACES)) {
+    const face = FACES[key];
+    face.params = {};
+    for (const c of face.controls) {
+      face.params[c.id] = (stored[key] && stored[key][c.id] !== undefined) ? stored[key][c.id] : c.def;
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// UI: tab bar
+// --------------------------------------------------------------------------
+function buildTabs() {
+  const tabs = document.getElementById('faceTabs');
+  tabs.innerHTML = '';
+  for (const key of Object.keys(FACES)) {
+    const t = document.createElement('button');
+    t.className = 'face-tab' + (key===activeFace ? ' active' : '');
+    t.textContent = FACES[key].name;
+    t.onclick = () => { activeFace = key; buildTabs(); buildPanel(); };
+    tabs.appendChild(t);
+  }
+}
+
+// --------------------------------------------------------------------------
+// UI: parameter panel
+// --------------------------------------------------------------------------
+function buildPanel() {
+  const face = FACES[activeFace];
+  document.getElementById('panelTitle').textContent = face.name;
+  document.getElementById('panelSubtitle').textContent = face.subtitle;
+
+  const panel = document.getElementById('controlPanel');
+  panel.innerHTML = '';
+
+  // Group by .group
+  const groups = {};
+  for (const c of face.controls) {
+    if (!groups[c.group]) groups[c.group] = [];
+    groups[c.group].push(c);
+  }
+  for (const groupName of Object.keys(groups)) {
+    const wrap = document.createElement('div');
+    wrap.className = 'group';
+    const lbl = document.createElement('div');
+    lbl.className = 'group-label';
+    lbl.textContent = groupName;
+    wrap.appendChild(lbl);
+    for (const c of groups[groupName]) wrap.appendChild(buildControl(face, c));
+    panel.appendChild(wrap);
+  }
+}
+
+function buildControl(face, c) {
+  const wrap = document.createElement('div');
+  wrap.className = 'control';
+  const lbl = document.createElement('label');
+  lbl.textContent = c.label;
+  wrap.appendChild(lbl);
+
+  const valSpan = document.createElement('span');
+  valSpan.className = 'value';
+
+  let input;
+  if (c.type === 'range') {
+    input = document.createElement('input');
+    input.type = 'range';
+    input.min = c.min; input.max = c.max; input.step = c.step;
+    input.value = face.params[c.id];
+    valSpan.textContent = formatVal(face.params[c.id], c.step);
+    input.oninput = () => {
+      const v = parseFloat(input.value);
+      face.params[c.id] = v;
+      valSpan.textContent = formatVal(v, c.step);
+      saveStored();
+    };
+  } else if (c.type === 'color') {
+    input = document.createElement('input');
+    input.type = 'color';
+    input.value = face.params[c.id];
+    valSpan.textContent = face.params[c.id];
+    input.oninput = () => {
+      face.params[c.id] = input.value;
+      valSpan.textContent = input.value;
+      saveStored();
+    };
+  } else if (c.type === 'select') {
+    input = document.createElement('select');
+    input.style.cssText = 'background:#0f0f12;color:#e8e8ec;border:1px solid #2a2a30;border-radius:4px;padding:4px;font-size:12px;';
+    for (const opt of c.options) {
+      const o = document.createElement('option');
+      o.value = opt; o.textContent = opt;
+      if (face.params[c.id] === opt) o.selected = true;
+      input.appendChild(o);
+    }
+    valSpan.textContent = face.params[c.id];
+    input.onchange = () => {
+      face.params[c.id] = input.value;
+      valSpan.textContent = input.value;
+      saveStored();
+    };
+  }
+  wrap.appendChild(input);
+  wrap.appendChild(valSpan);
+  return wrap;
+}
+
+function formatVal(v, step) {
+  if (step >= 1) return String(Math.round(v));
+  if (step >= 0.1) return v.toFixed(1);
+  if (step >= 0.01) return v.toFixed(2);
+  return v.toFixed(3);
+}
+
+// --------------------------------------------------------------------------
+// Render loop
+// --------------------------------------------------------------------------
+function loop() {
+  const face = FACES[activeFace];
+  // Reset to a known clean state every frame — guarantees no save-stack growth,
+  // no leftover transforms, no leftover clip regions, regardless of what the
+  // face renderer did internally.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.lineCap = 'butt';
+  ctx.setLineDash([]);
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(0, 0, W, H, 55);
+  ctx.clip();
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+  try {
+    face.render(ctx, face.params, new Date());
+  } catch (e) {
+    console.error('Render error in', activeFace, e);
+  }
+  ctx.restore();
+
+  requestAnimationFrame(loop);
+}
+
+// --------------------------------------------------------------------------
+// Export
+// --------------------------------------------------------------------------
+function exportSwift() {
+  const face = FACES[activeFace];
+  const lines = [];
+  lines.push(`// === ${face.name} — values from Design Studio ===`);
+  lines.push(`// File: ${face.swiftFile}`);
+  lines.push(`// Generated: ${new Date().toISOString()}`);
+  lines.push(``);
+
+  // Group by group
+  const groups = {};
+  for (const c of face.controls) {
+    if (!groups[c.group]) groups[c.group] = [];
+    groups[c.group].push(c);
+  }
+
+  for (const g of Object.keys(groups)) {
+    lines.push(`// — ${g} —`);
+    for (const c of groups[g]) {
+      const v = face.params[c.id];
+      let swiftVal;
+      if (c.type === 'color') {
+        const r = parseInt(v.substring(1,3),16)/255;
+        const gC = parseInt(v.substring(3,5),16)/255;
+        const b = parseInt(v.substring(5,7),16)/255;
+        swiftVal = `Color(red: ${r.toFixed(3)}, green: ${gC.toFixed(3)}, blue: ${b.toFixed(3)}) // ${v}`;
+      } else if (c.type === 'select') {
+        swiftVal = `"${v}"`;
+      } else {
+        swiftVal = String(v);
+      }
+      lines.push(`let ${c.id}: ${c.type === 'color' ? 'Color' : c.type === 'select' ? 'String' : 'CGFloat'} = ${swiftVal}`);
+    }
+    lines.push(``);
+  }
+
+  // Also dump as plain JSON for round-tripping
+  lines.push(`// JSON dump (for re-loading the Studio):`);
+  lines.push(`// ${JSON.stringify(face.params)}`);
+
+  document.getElementById('exportArea').textContent = lines.join('\n');
+  // Open the details if collapsed
+  const det = document.querySelector('details');
+  if (det) det.open = true;
+}
+
+// --------------------------------------------------------------------------
+// Wire buttons
+// --------------------------------------------------------------------------
+document.getElementById('btnExport').onclick = exportSwift;
+document.getElementById('btnReset').onclick = () => {
+  const face = FACES[activeFace];
+  for (const c of face.controls) face.params[c.id] = c.def;
+  saveStored();
+  buildPanel();
+};
+document.getElementById('btnClearStorage').onclick = () => {
+  localStorage.removeItem(STORAGE_KEY);
+  initParams();
+  buildPanel();
+};
+
+// --------------------------------------------------------------------------
+// Boot
+// --------------------------------------------------------------------------
+initParams();
+buildTabs();
+buildPanel();
+loop();
+</script>
+</body>
+</html>

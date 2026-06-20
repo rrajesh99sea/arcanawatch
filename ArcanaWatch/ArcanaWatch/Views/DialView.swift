@@ -110,7 +110,7 @@ struct DialView: View {
             let y = CGFloat(sin(angle.radians)) * r
 
             Text(text)
-                .font(.custom(WatchConstants.romanFontName, size: diameter * 0.055))
+                .font(.custom(WatchConstants.romanFontName, size: diameter * WatchConstants.fontNumeralLg))
                 .foregroundColor(WatchConstants.silver)
                 .offset(x: x, y: y)
         }

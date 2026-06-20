@@ -8,8 +8,8 @@ struct DateSubdialView: View {
     private var offset: CGFloat {
         watchDiameter * WatchConstants.subdialOffset
     }
-    private var windowWidth: CGFloat { watchDiameter * 0.07 }
-    private var windowHeight: CGFloat { watchDiameter * 0.05 }
+    private var windowWidth: CGFloat { watchDiameter * 0.10 }
+    private var windowHeight: CGFloat { watchDiameter * 0.08 }
 
     var body: some View {
         let day = AngleCalculations.dayOfMonth(from: date)
@@ -28,7 +28,7 @@ struct DateSubdialView: View {
             // Day number
             Text("\(day)")
                 .font(.custom(WatchConstants.romanFontName,
-                              size: watchDiameter * 0.033))
+                              size: watchDiameter * WatchConstants.fontValueLg))
                 .fontWeight(.bold)
                 .foregroundColor(.black)
         }

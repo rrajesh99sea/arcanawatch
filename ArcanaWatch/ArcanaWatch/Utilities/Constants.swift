@@ -45,4 +45,23 @@ enum WatchConstants {
 
     // Font
     static let romanFontName = "Georgia"
+
+    // ─── Typography scale ──────────────────────────────────────────────
+    // All sizes are ratios of watch diameter so they auto-scale across
+    // sizes (40/41/45/46/49 mm). Calibrated so the smallest tier
+    // (fontCaptionXS) clears Apple's ~11 pt readable floor on a typical
+    // 198-pt-diameter Apple Watch screen. Use these named tiers in face
+    // views instead of inline ratios — that way one knob retunes
+    // legibility everywhere.
+    //
+    //   Ratio   ≈pt @198dia  Use for
+    //   ─────   ───────────  ──────────────────────────────────────────
+    static let fontCaptionXS:  CGFloat = 0.060   // ≈12 pt — tiny annotations, brand subtitles
+    static let fontCaption:    CGFloat = 0.068   // ≈13.5 pt — labels (TMP, BAT, M/E/S, bezel #s)
+    static let fontBody:       CGFloat = 0.075   // ≈15 pt — body text, paired weather icons
+    static let fontValue:      CGFloat = 0.085   // ≈17 pt — primary data values (battery%, rain%)
+    static let fontValueLg:    CGFloat = 0.100   // ≈20 pt — prominent data displays (temp, date)
+    static let fontNumeral:    CGFloat = 0.090   // ≈18 pt — chapter-ring numerals
+    static let fontNumeralLg:  CGFloat = 0.115   // ≈23 pt — prominent dial numerals
+    static let fontHero:       CGFloat = 0.150   // ≈30 pt — hero hour numerals (pilot/field)
 }

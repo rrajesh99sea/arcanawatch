@@ -31,7 +31,7 @@ struct BatterySubdialView: View {
             // Percentage label
             Text("\(Int(battery.level * 100))%")
                 .font(.custom(WatchConstants.romanFontName,
-                              size: watchDiameter * 0.026))
+                              size: watchDiameter * WatchConstants.fontValue))
                 .foregroundColor(WatchConstants.silver)
                 .offset(y: subdialDiameter * 0.15)
         }
@@ -42,7 +42,7 @@ struct BatterySubdialView: View {
     private func arcSegment(from start: CGFloat, to end: CGFloat) -> Path {
         let startAngle = Angle.degrees(135)
         let fullSweep = 270.0
-        Path { path in
+        return Path { path in
             path.addArc(
                 center: CGPoint(x: subdialDiameter / 2, y: subdialDiameter / 2),
                 radius: arcRadius,
