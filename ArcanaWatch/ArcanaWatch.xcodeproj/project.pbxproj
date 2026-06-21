@@ -24,8 +24,6 @@
 		914CF8474D7A08E154CBF925 /* BatterySubdialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E462776E05FF179FE2E3568 /* BatterySubdialView.swift */; };
 		99B0A1DA8CC1425CC5BC78FF /* SubdialHandShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8903521C3180658D7FD752CB /* SubdialHandShape.swift */; };
 		A321C9B1B27794DC87128C38 /* DepthsWatchFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0D4679540AF937D2DA04FB5 /* DepthsWatchFaceView.swift */; };
-		DUA17112E000000000000001 /* DualTimeWatchFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DUA17112E000000000000002 /* DualTimeWatchFaceView.swift */; };
-		SWS17112E000000000000001 /* SWSWatchFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SWS17112E000000000000002 /* SWSWatchFaceView.swift */; };
 		A76D01F3988B22E46A68C74F /* DauphineHandShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A79A36395C29782E232CA6E /* DauphineHandShape.swift */; };
 		ADCEA2870BC0ACA65EC36684 /* ChroniclerWatchFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D150BE3998D59DD2976DA8C /* ChroniclerWatchFaceView.swift */; };
 		B22A4B395D6FE80507D904B3 /* HandsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292AA67ACEAB876FDF59B73F /* HandsView.swift */; };
@@ -35,9 +33,11 @@
 		C927829B61853FD1272293C1 /* SwordHandShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B08BCB4718DE9E26F931B1B /* SwordHandShape.swift */; };
 		CAF756DB6D4D4DA5AC99A79B /* ArcanaWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC7CD5BBDB89E2254320A06 /* ArcanaWatchApp.swift */; };
 		DFAE8661EDC918E56AA9792E /* WatchFaceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9546ED7ED1EECA37C583A44E /* WatchFaceType.swift */; };
+		DUA17112E000000000000001 /* DualTimeWatchFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DUA17112E000000000000002 /* DualTimeWatchFaceView.swift */; };
 		E09511C0EEAB47BD47EE6524 /* WeatherModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0DCBF4B8FDD3BE560479A9 /* WeatherModel.swift */; };
 		E15355805A3EC512EA5AFA34 /* DateSubdialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA14408CFC35EE803056D16A /* DateSubdialView.swift */; };
 		F3BB39DF3C9559BD4AFE2339 /* SubdialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB32BC5FB7241FFA7A1C56CF /* SubdialView.swift */; };
+		SWS17112E000000000000001 /* SWSWatchFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SWS17112E000000000000002 /* SWSWatchFaceView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,8 +71,8 @@
 		D5C4FBB57C21BD6CA65DFBA9 /* DialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialView.swift; sourceTree = "<group>"; };
 		D6E1ED219AFD668BF02460B9 /* BezelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezelView.swift; sourceTree = "<group>"; };
 		DB32BC5FB7241FFA7A1C56CF /* SubdialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubdialView.swift; sourceTree = "<group>"; };
-		F0D4679540AF937D2DA04FB5 /* DepthsWatchFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthsWatchFaceView.swift; sourceTree = "<group>"; };
 		DUA17112E000000000000002 /* DualTimeWatchFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualTimeWatchFaceView.swift; sourceTree = "<group>"; };
+		F0D4679540AF937D2DA04FB5 /* DepthsWatchFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepthsWatchFaceView.swift; sourceTree = "<group>"; };
 		SWS17112E000000000000002 /* SWSWatchFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SWSWatchFaceView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 

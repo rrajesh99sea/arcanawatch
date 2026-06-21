@@ -28,6 +28,11 @@
 	<string>Your location is used to show weather and rain information on the watch face.</string>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKBackgroundModes</key>
+	<array>
+		<string>background-app-refresh</string>
+		<string>self-care</string>
+	</array>
 	<key>WKWatchOnly</key>
 	<true/>
 </dict>
