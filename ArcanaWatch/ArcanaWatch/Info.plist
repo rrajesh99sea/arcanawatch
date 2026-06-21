@@ -31,7 +31,6 @@
 	<key>WKBackgroundModes</key>
 	<array>
 		<string>background-app-refresh</string>
-		<string>self-care</string>
 	</array>
 	<key>WKWatchOnly</key>
 	<true/>
